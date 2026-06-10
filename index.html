@@ -266,6 +266,34 @@
   }
   .small-btn:active { background:#ffeef4; }
 
+  .message-modal {
+    position:fixed; inset:0; z-index:98;
+    display:flex; align-items:center; justify-content:center;
+    padding:22px; background:rgba(91,58,72,.32);
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .message-modal.show { opacity:1; pointer-events:auto; }
+  .message-card {
+    width:min(420px, 100%); border-radius:24px;
+    background:rgba(255,255,255,.96); border:3px dashed #ffaec9;
+    box-shadow:0 18px 44px rgba(91,58,72,.24);
+    padding:22px 18px 18px; text-align:left;
+    transform:translateY(12px) scale(.98); transition:transform .25s ease;
+  }
+  .message-modal.show .message-card { transform:translateY(0) scale(1); }
+  .message-title { color:#e75480; font-weight:700; font-size:20px; text-align:center; line-height:1.45; }
+  .message-note { color:#a06b7d; font-size:14px; line-height:1.7; margin:8px 2px 12px; text-align:center; }
+  #cloudMsg {
+    width:100%; min-height:132px; resize:none;
+    border:2px solid #ffd3e0; border-radius:18px;
+    padding:13px 14px; font:inherit; font-size:16px; line-height:1.7;
+    color:#7a4a5a; background:#fff7fa; outline:none;
+  }
+  #cloudMsg:focus { border-color:#e75480; box-shadow:0 0 0 4px rgba(231,84,128,.14); }
+  .message-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+  .message-actions .small-btn { padding:10px 16px; }
+  .message-actions .send-btn { color:#fff; background:linear-gradient(135deg,#ff8fab,#e75480); border-color:#e75480; }
+
   /* ===== touch sparkles ===== */
   #sparkles { position:fixed; inset:0; pointer-events:none; z-index:55; overflow:hidden; }
   .spark { position:absolute; font-size:17px; animation:sparkFly .8s ease-out forwards; }
@@ -531,6 +559,18 @@
 </div>
 
 <div id="toast"></div>
+
+<div class="message-modal" id="cloudModal" aria-hidden="true">
+  <div class="message-card" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
+    <div class="message-title" id="cloudModalTitle">มีอะไรอยากบอกเมฆไหม 💬</div>
+    <div class="message-note">พิมพ์ไว้ตรงนี้ได้เลย เดี๋ยวเว็บช่วยก๊อปข้อความให้นะ</div>
+    <textarea id="cloudMsg" maxlength="500" placeholder="เช่น ขอบคุณนะ / มีความสุขมาก / ขอของขวัญเพิ่มได้ไหม 😳"></textarea>
+    <div class="message-actions">
+      <button class="small-btn" id="cloudCancelBtn">ไว้ก่อน</button>
+      <button class="small-btn send-btn" id="cloudSendBtn">ส่งให้เมฆ 📨</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ================= helpers ================= */
@@ -1203,31 +1243,62 @@ function startWish(){
     }
   })();
 }
-$('#copyBtn').addEventListener('click', async ()=>{
-  const text = `🎂 เจนเลือกของขวัญ: ${selected ? selected.emo+' '+selected.name+' ('+fmt(selected.price)+')' : '-'}`;
-  try {
-    await navigator.clipboard.writeText(text);
-    toast('ก๊อปแล้ว! ส่งไปบอกคนทำเว็บได้เลย 📨');
-  } catch(e){
-    toast('ก๊อปไม่ได้ งั้นแคปหน้าจอส่งมาแทนนะ 📸');
-  }
-});
+const copyBtn = $('#copyBtn');
+if(copyBtn){
+  copyBtn.addEventListener('click', async ()=>{
+    const text = `🎂 เจนเลือกของขวัญ: ${selected ? selected.emo+' '+selected.name+' ('+fmt(selected.price)+')' : '-'}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('ก๊อปแล้ว! ส่งไปบอกคนทำเว็บได้เลย 📨');
+    } catch(e){
+      toast('ก๊อปไม่ได้ งั้นแคปหน้าจอส่งมาแทนนะ 📸');
+    }
+  });
+}
 $('#replayBtn').addEventListener('click', ()=> location.reload());
 
 /* ================= ข้อความถึงเมฆ ================= */
+const cloudModal = $('#cloudModal');
+const cloudMsg = $('#cloudMsg');
+function openCloudModal(){
+  cloudModal.classList.add('show');
+  cloudModal.setAttribute('aria-hidden', 'false');
+  cloudMsg.value = '';
+  setTimeout(()=> cloudMsg.focus(), 80);
+}
+function closeCloudModal(){
+  cloudModal.classList.remove('show');
+  cloudModal.setAttribute('aria-hidden', 'true');
+}
 $('#noBtn').addEventListener('click', ()=>{
-  const msg = prompt('มีอะไรอยากบอกเมฆไหม พิมพ์ไว้ตรงนี้ได้เลยนะ 💬');
-  if(!msg || !msg.trim()){
+  openCloudModal();
+});
+$('#cloudCancelBtn').addEventListener('click', ()=>{
+  closeCloudModal();
+  toast('ไม่เป็นไร เมฆรอฟังได้เสมอนะ ☁️');
+});
+$('#cloudSendBtn').addEventListener('click', ()=>{
+  const msg = cloudMsg.value.trim();
+  if(!msg){
     toast('ไม่เป็นไร เมฆรอฟังได้เสมอนะ ☁️');
+    cloudMsg.focus();
     return;
   }
-  const text = `ข้อความจากเจนถึงเมฆ 💬\n\n${msg.trim()}`;
+  const text = `ข้อความจากเจนถึงเมฆ 💬\n\n${msg}`;
   navigator.clipboard.writeText(text).then(()=>{
+    closeCloudModal();
     toast('ก๊อปข้อความถึงเมฆไว้ให้แล้ว ส่งต่อได้เลยนะ 📨', 3000);
     burst(innerWidth/2, innerHeight/3, 80);
   }).catch(()=>{
+    closeCloudModal();
     toast('ก๊อปอัตโนมัติไม่ได้ แต่เมฆอยากฟังข้อความนี้แน่นอนนะ 💖', 3200);
   });
+});
+cloudModal.addEventListener('click', e=>{
+  if(e.target === cloudModal) closeCloudModal();
+});
+addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && cloudModal.classList.contains('show')) closeCloudModal();
 });
 
 /* ================= 8 : fireworks finale ================= */
@@ -1243,11 +1314,12 @@ for(let i=0;i<26;i++){
   fireScreen.appendChild(st);
 }
 function goFireworks(){
+  closeCloudModal();
   show('#sFire');
   launchRocket(); launchRocket(); launchRocket();
 }
 $('#fireBtn').addEventListener('click', ()=>{
-  wishFlash('ปิดท้ายด้วย... พลุชุดใหญ่ 🎆', goFireworks);
+  goFireworks();
 });
 $('#backLetterBtn').addEventListener('click', ()=> show('#s7'));
 $('#replayBtn2').addEventListener('click', ()=> location.reload());
