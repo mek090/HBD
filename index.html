@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎂 Happy Birthday เจน 🎉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Itim&family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; }
+  body {
+    font-family:'Mali','Itim',sans-serif;
+    background:linear-gradient(160deg,#ffe5ec 0%,#ffd6e8 30%,#e8d5ff 65%,#d0e8ff 100%);
+    color:#7a4a5a;
+    touch-action:manipulation;
+    user-select:none; -webkit-user-select:none;
+  }
+
+  /* ===== background floaters ===== */
+  #floaters { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+  .floater { position:absolute; bottom:-60px; font-size:28px; animation:floatUp linear infinite; opacity:.7; }
+  @keyframes floatUp {
+    0%   { transform:translateY(0) rotate(0deg); opacity:0; }
+    10%  { opacity:.75; }
+    100% { transform:translateY(-110vh) rotate(30deg); opacity:0; }
+  }
+
+  /* ===== confetti ===== */
+  #confetti { position:fixed; inset:0; pointer-events:none; z-index:50; }
+
+  /* ===== screens ===== */
+  .screen {
+    position:fixed; inset:0; z-index:10;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center;
+    opacity:0; pointer-events:none; transform:translateY(20px);
+    transition:opacity .6s ease, transform .6s ease;
+    overflow-y:auto;
+  }
+  .screen.active { opacity:1; pointer-events:auto; transform:translateY(0); }
+  .screen.scrolly { justify-content:flex-start; }
+
+  h1 { font-size:clamp(26px,7vw,40px); color:#e75480; text-shadow:0 2px 0 #fff; line-height:1.4; }
+  h2 { font-size:clamp(20px,5.5vw,30px); color:#e75480; text-shadow:0 2px 0 #fff; line-height:1.5; }
+  p  { font-size:clamp(15px,4.2vw,19px); line-height:1.8; }
+
+  .btn {
+    font-family:inherit; font-weight:700;
+    font-size:clamp(16px,4.5vw,20px);
+    color:#fff; background:linear-gradient(135deg,#ff8fab,#e75480);
+    border:none; border-radius:999px;
+    padding:14px 34px; margin-top:22px;
+    box-shadow:0 6px 0 #c43e68, 0 10px 20px rgba(231,84,128,.35);
+    cursor:pointer; transition:transform .15s;
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  .btn:active { transform:translateY(4px); box-shadow:0 2px 0 #c43e68; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+  /* ===== wish flash overlay ===== */
+  #wishFlash {
+    position:fixed; inset:0; z-index:40;
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    background:linear-gradient(160deg,#ffd6e8,#e8d5ff);
+    padding:30px; text-align:center;
+    opacity:0; pointer-events:none; transition:opacity .5s;
+  }
+  #wishFlash.show { opacity:1; }
+  #wishFlash .wf-text { font-size:clamp(22px,6.5vw,34px); font-weight:700; color:#e75480; text-shadow:0 2px 0 #fff; line-height:1.6; animation:wfPop .6s; }
+  #wishFlash .wf-spark { font-size:46px; margin-bottom:14px; animation:bounce 1s infinite; }
+  @keyframes wfPop { from{transform:scale(.6); opacity:0} to{transform:scale(1); opacity:1} }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+
+  /* ===== screen 1 : gift box ===== */
+  .giftbox { font-size:110px; cursor:pointer; animation:wiggle 1.2s ease-in-out infinite; filter:drop-shadow(0 10px 14px rgba(0,0,0,.18)); }
+  @keyframes wiggle {
+    0%,100% { transform:rotate(-6deg) scale(1); }
+    25%     { transform:rotate(6deg)  scale(1.06); }
+    50%     { transform:rotate(-4deg) scale(1); }
+    75%     { transform:rotate(5deg)  scale(1.06); }
+  }
+  .hint { margin-top:14px; font-size:15px; color:#a06b7d; animation:blink 1.4s infinite; }
+  @keyframes blink { 50%{opacity:.35} }
+
+  /* ===== song select ===== */
+  .song-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; width:100%; max-width:420px; margin-top:16px; }
+  .song-card {
+    background:rgba(255,255,255,.88); border:3px solid #ffd3e0; border-radius:18px;
+    padding:10px; cursor:pointer; transition:transform .15s, border-color .2s, box-shadow .2s;
+    box-shadow:0 6px 14px rgba(231,84,128,.12); text-align:left;
+  }
+  .song-card:active { transform:scale(.95); }
+  .song-card img { width:100%; height:96px; object-fit:cover; border-radius:12px; display:block; background:#ffeef4; }
+  .song-card .sn-title { font-size:13.5px; font-weight:700; color:#7a4a5a; margin-top:7px; line-height:1.35; }
+  .song-card .sn-artist { font-size:11.5px; color:#b58a99; margin-top:1px; }
+  .song-card.hl { border-color:#ffb800; box-shadow:0 0 0 4px rgba(255,184,0,.35); transform:scale(1.04); }
+  .song-card.selected { border-color:#e75480; background:#fff0f5; box-shadow:0 0 0 4px rgba(231,84,128,.25); }
+  .song-card.selected .sn-title::after { content:' 🎶'; }
+  .dice-btn {
+    font-family:inherit; font-weight:700; font-size:15px;
+    color:#7a4a5a; background:#fff; border:3px dashed #ffaec9; border-radius:999px;
+    padding:11px 24px; margin-top:16px; cursor:pointer;
+  }
+  .dice-btn:active { background:#ffeef4; }
+  .dice-btn:disabled { opacity:.5; }
+
+  /* ===== screen 2 : cake ===== */
+  .cake-wrap { position:relative; margin:8px 0 14px; }
+  .cake { font-size:120px; filter:drop-shadow(0 10px 12px rgba(0,0,0,.15)); }
+  .candles { display:flex; gap:14px; justify-content:center; margin-bottom:-8px; }
+  .candle { width:46px; height:46px; cursor:pointer; position:relative; transition:transform .15s; }
+  .candle:active { transform:scale(.88); }
+  .candle .stick { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:10px; height:26px; border-radius:4px; background:repeating-linear-gradient(45deg,#ff9ebc 0 5px,#fff 5px 10px); }
+  .candle .flame {
+    position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
+    width:14px; height:20px; border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+    background:radial-gradient(circle at 50% 70%,#fff7ae 0%,#ffb347 55%,#ff7b00 100%);
+    animation:flicker .25s infinite alternate;
+  }
+  @keyframes flicker { from{transform:translateX(-50%) scale(1) rotate(-3deg)} to{transform:translateX(-50%) scale(1.15) rotate(3deg)} }
+  .candle.out .flame { animation:puff .45s forwards; }
+  @keyframes puff { to{ transform:translateX(-50%) scale(2.2); opacity:0; filter:blur(4px);} }
+  .candle.out::after { content:'💨'; position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:16px; animation:smokeUp 1s forwards; }
+  @keyframes smokeUp { to{ transform:translate(-50%,-26px); opacity:0; } }
+
+  /* ===== screen 3 : envelopes ===== */
+  .env-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:20px; width:100%; max-width:360px; }
+  .env {
+    background:rgba(255,255,255,.85); border:3px solid #ffd3e0; border-radius:20px;
+    padding:22px 10px; font-size:44px; cursor:pointer;
+    box-shadow:0 6px 14px rgba(231,84,128,.12);
+    transition:transform .2s;
+    min-height:108px; display:flex; align-items:center; justify-content:center;
+  }
+  .env:active { transform:scale(.93); }
+  .env.opened { font-size:15px; font-weight:700; color:#e75480; line-height:1.5; padding:14px 10px; animation:flipIn .5s; border-color:#e75480; background:#fff0f5; cursor:default; }
+  @keyframes flipIn { from{transform:rotateY(90deg)} to{transform:rotateY(0)} }
+
+  /* ===== screen 4 : heart game ===== */
+  #gameArea { position:fixed; inset:0; z-index:15; pointer-events:none; }
+  .drop {
+    position:absolute; top:-60px; font-size:38px; cursor:pointer; pointer-events:auto;
+    animation:fall linear forwards;
+    padding:8px;
+  }
+  @keyframes fall { to{ transform:translateY(115vh); } }
+  .drop.caught { animation:catchPop .35s forwards; }
+  @keyframes catchPop { to{ transform:scale(2); opacity:0; } }
+  #scoreBar {
+    background:rgba(255,255,255,.9); border-radius:999px; padding:10px 24px;
+    font-weight:700; font-size:18px; color:#e75480;
+    box-shadow:0 6px 14px rgba(231,84,128,.15); margin-top:14px;
+  }
+
+  /* ===== screen 5 : shop (Shopee style) ===== */
+  #s5 { padding:0; background:#f5f5f5; }
+  .shop-head {
+    position:sticky; top:0; z-index:5; width:100%;
+    background:linear-gradient(135deg,#ff6f3c,#ee4d2d);
+    padding:14px 16px 12px; color:#fff;
+  }
+  .shop-head .logo { font-weight:700; font-size:19px; text-align:left; }
+  .shop-search {
+    margin-top:10px; background:#fff; border-radius:8px; padding:9px 14px;
+    color:#bbb; font-size:14px; text-align:left;
+  }
+  .shop-banner {
+    width:calc(100% - 24px); margin:12px auto 4px;
+    background:linear-gradient(135deg,#ffd166,#ff8fab);
+    border-radius:14px; padding:14px; color:#fff; font-weight:700;
+    font-size:15.5px; text-align:center; text-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .shop-note { font-size:13px; color:#888; margin:6px 0 2px; }
+  .prod-grid {
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px;
+    width:100%; max-width:480px; padding:10px 12px 110px;
+  }
+  .prod {
+    background:#fff; border-radius:10px; overflow:hidden; cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,.08); text-align:left; position:relative;
+    transition:box-shadow .2s, transform .15s;
+  }
+  .prod:active { transform:scale(.97); }
+  .prod.selected { box-shadow:0 0 0 3px #ee4d2d; }
+  .prod.selected::after {
+    content:'✓'; position:absolute; top:8px; right:8px; width:26px; height:26px;
+    background:#ee4d2d; color:#fff; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .prod-img {
+    height:120px; display:flex; align-items:center; justify-content:center;
+    font-size:58px; position:relative; overflow:hidden;
+  }
+  .prod-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .prod-img .ship { position:absolute; bottom:6px; left:6px; background:#26aa99; color:#fff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-family:sans-serif; }
+  .prod-info { padding:8px 10px 10px; }
+  .prod-name { font-size:13px; color:#333; line-height:1.45; height:38px; overflow:hidden; }
+  .prod-price { margin-top:5px; color:#ee4d2d; font-weight:700; font-size:16px; font-family:sans-serif; }
+  .prod-price s { color:#bbb; font-weight:400; font-size:11.5px; margin-left:5px; }
+  .prod-meta { margin-top:3px; font-size:11px; color:#999; font-family:sans-serif; }
+  .prod-meta .star { color:#ffb800; }
+  .prod .loadbar {
+    position:absolute; inset:0; background:rgba(255,255,255,.85);
+    display:none; align-items:center; justify-content:center; flex-direction:column;
+    font-size:13px; color:#666; gap:8px;
+  }
+  .prod .loadbar.on { display:flex; }
+  .spinner { width:26px; height:26px; border:3px solid #eee; border-top-color:#ee4d2d; border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  #buyBar {
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    background:#fff; box-shadow:0 -4px 16px rgba(0,0,0,.12);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    display:none; align-items:center; justify-content:space-between; gap:12px;
+  }
+  #buyBar.on { display:flex; }
+  #buyBar .sel-name { font-size:13.5px; color:#555; text-align:left; flex:1; line-height:1.4; }
+  #buyBar button {
+    font-family:inherit; font-weight:700; font-size:16px;
+    background:#ee4d2d; color:#fff; border:none; border-radius:8px;
+    padding:12px 22px; cursor:pointer; white-space:nowrap;
+  }
+
+  /* ===== screen 6 : checkout ===== */
+  .receipt {
+    background:#fff; border-radius:16px; width:100%; max-width:400px;
+    box-shadow:0 14px 36px rgba(231,84,128,.18); overflow:hidden; margin-top:14px;
+  }
+  .receipt .r-head { background:linear-gradient(135deg,#ff6f3c,#ee4d2d); color:#fff; padding:14px; font-weight:700; }
+  .receipt .r-body { padding:16px 18px; }
+  .r-row { display:flex; justify-content:space-between; font-size:14.5px; padding:7px 0; color:#555; gap:10px; }
+  .r-row span:first-child { text-align:left; }
+  .r-row span:last-child { font-family:sans-serif; white-space:nowrap; }
+  .r-row.discount span { color:#26aa99; font-weight:700; }
+  .r-row.total { border-top:2px dashed #eee; margin-top:6px; padding-top:12px; font-weight:700; color:#ee4d2d; font-size:17px; }
+  .r-pay { background:#fff8f0; border-radius:10px; padding:10px; margin-top:12px; font-size:13.5px; color:#a06b7d; }
+
+  /* ===== screen 7 : final letter ===== */
+  #s7 {
+    justify-content:flex-start;
+    overflow:hidden;
+    gap:0;
+    padding:28px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  #s7 h2 { flex-shrink:0; }
+  .wishbox {
+    background:rgba(255,255,255,.78); backdrop-filter:blur(6px);
+    border:3px dashed #ffaec9; border-radius:24px;
+    padding:24px 20px; max-width:430px; width:100%;
+    flex:1 1 auto; min-height:0; overflow-y:auto;
+    box-shadow:0 12px 30px rgba(231,84,128,.18);
+    overscroll-behavior:contain;
+  }
+  #wishText { white-space:pre-wrap; text-align:left; font-size:clamp(15px,4.1vw,18px); line-height:1.85; color:#8a4a60; }
+  .cursor { display:inline-block; width:2px; height:1.1em; background:#e75480; vertical-align:-2px; animation:blink .8s infinite; }
+  #finalBtns {
+    flex-shrink:0; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;
+    width:100%; max-width:760px; margin-top:10px;
+  }
+  .small-btn {
+    font-family:inherit; font-size:14.5px; font-weight:700;
+    color:#e75480; background:#fff; border:2px solid #ffaec9; border-radius:999px;
+    padding:9px 18px; margin:0; cursor:pointer;
+  }
+  .small-btn:active { background:#ffeef4; }
+
+  /* ===== touch sparkles ===== */
+  #sparkles { position:fixed; inset:0; pointer-events:none; z-index:55; overflow:hidden; }
+  .spark { position:absolute; font-size:17px; animation:sparkFly .8s ease-out forwards; }
+  @keyframes sparkFly {
+    from { transform:translate(0,0) scale(.5); opacity:1; }
+    to   { transform:translate(var(--dx),var(--dy)) scale(1.4); opacity:0; }
+  }
+
+  /* ===== quiz ===== */
+  .quiz-card {
+    background:rgba(255,255,255,.85); border:3px dashed #ffaec9; border-radius:24px;
+    padding:22px 18px; width:100%; max-width:400px; margin-top:14px;
+    box-shadow:0 12px 30px rgba(231,84,128,.15);
+  }
+  #quizQ { font-size:clamp(17px,5vw,22px); font-weight:700; color:#7a4a5a; line-height:1.6; }
+  .quiz-opt {
+    display:block; width:100%; font-family:inherit; font-weight:700;
+    font-size:15.5px; color:#7a4a5a; text-align:center;
+    background:#fff; border:3px solid #ffd3e0; border-radius:16px;
+    padding:13px 12px; margin-top:12px; cursor:pointer;
+    transition:transform .15s, border-color .2s, background .2s;
+  }
+  .quiz-opt:active { transform:scale(.96); }
+  .quiz-opt.right { border-color:#06d6a0; background:#eafff7; }
+  .quiz-opt.shake { animation:shakeNo .4s; }
+  @keyframes shakeNo { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+  #quizDots { margin-top:16px; }
+  #quizDots span { display:inline-block; width:10px; height:10px; border-radius:50%; background:#ffd3e0; margin:0 4px; transition:.3s; }
+  #quizDots span.on { background:#e75480; transform:scale(1.3); }
+
+  /* ===== balloon hunt ===== */
+  #balloonArea { position:fixed; inset:0; z-index:15; pointer-events:none; overflow:hidden; }
+  .balloon {
+    position:absolute; bottom:-130px; width:70px; cursor:pointer; pointer-events:auto;
+    animation:riseUp linear forwards; text-align:center;
+  }
+  @keyframes riseUp { to { transform:translateY(-125vh); } }
+  .balloon .bl { font-size:58px; display:block; }
+  .balloon .tag {
+    position:absolute; top:20px; left:50%; transform:translateX(-50%);
+    background:#fff; border-radius:50%; width:27px; height:27px; line-height:27px;
+    font-weight:700; color:#e75480; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,.25);
+  }
+  .balloon.popped { animation:popBye .3s forwards; }
+  @keyframes popBye { to { transform:scale(1.6); opacity:0; } }
+  #balloonSlots { display:flex; gap:10px; justify-content:center; margin-top:14px; }
+  #balloonSlots .slot {
+    width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,.85);
+    border:3px dashed #ffaec9; display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:700; color:#d4a5b5;
+  }
+  #balloonSlots .slot.got { border-style:solid; border-color:#e75480; color:#e75480; background:#fff0f5; animation:pop .3s; }
+  @keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+
+  /* ===== scratch card ===== */
+  .scratch-wrap {
+    position:relative; width:100%; max-width:340px; margin-top:18px;
+    border-radius:20px; overflow:hidden; box-shadow:0 12px 30px rgba(231,84,128,.2);
+  }
+  .coupon {
+    background:linear-gradient(135deg,#fff7fa,#ffeef6);
+    border:3px dashed #ff8fab; border-radius:20px;
+    padding:22px 16px; min-height:210px;
+    display:flex; flex-direction:column; justify-content:center; gap:6px;
+  }
+  .coupon .cp-title { font-size:19px; font-weight:700; color:#e75480; }
+  .coupon .cp-line { font-size:15px; color:#8a4a60; font-weight:700; }
+  .coupon .cp-note { font-size:12px; color:#b58a99; margin-top:6px; }
+  #scratchCv { position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:pointer; transition:opacity .8s; }
+  #scratchCv.cleared { opacity:0; pointer-events:none; }
+
+  /* ===== fireworks finale ===== */
+  #sFire { background:linear-gradient(180deg,#191036 0%,#2a1650 55%,#0d0a22 100%); }
+  #sFire h2 {
+    color:#ffe18d;
+    text-shadow:0 0 16px rgba(255,210,120,.95), 0 0 42px rgba(255,140,200,.75);
+    animation:glowPulse 2s ease-in-out infinite;
+    font-size:clamp(24px,7.5vw,42px);
+  }
+  @keyframes glowPulse { 0%,100%{opacity:.9} 50%{opacity:1; transform:scale(1.03)} }
+  #sFire p { color:#cdbcf2; }
+  #sFire .small-btn { background:rgba(255,255,255,.1); color:#ffd9e8; border-color:#9d7bd8; }
+  #sFire .star { position:absolute; border-radius:50%; background:#fff; animation:twinkle 2.4s infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.15} 50%{opacity:.9} }
+
+  /* ===== forbidden button + screen shake ===== */
+  .danger-btn { color:#fff !important; background:#ff5252 !important; border-color:#d63031 !important; }
+  body.shaking { animation:bodyShake .5s; }
+  @keyframes bodyShake {
+    0%,100% { transform:translate(0,0); }
+    20% { transform:translate(-9px,5px); }
+    40% { transform:translate(9px,-5px); }
+    60% { transform:translate(-7px,-4px); }
+    80% { transform:translate(7px,4px); }
+  }
+
+  /* toast */
+  #toast {
+    position:fixed; left:50%; bottom:95px; transform:translateX(-50%) translateY(20px);
+    background:#5b3a48; color:#fff; font-size:14.5px; line-height:1.6;
+    padding:12px 20px; border-radius:16px; max-width:86vw;
+    opacity:0; pointer-events:none; transition:.3s; z-index:99; text-align:center;
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* music button */
+  #musicBtn {
+    position:fixed; top:14px; right:14px; z-index:60;
+    width:46px; height:46px; border-radius:50%;
+    border:2px solid #ffaec9; background:rgba(255,255,255,.9);
+    font-size:20px; cursor:pointer; box-shadow:0 4px 10px rgba(231,84,128,.2);
+  }
+  #musicBtn.playing { animation:spinSlow 3s linear infinite; }
+  @keyframes spinSlow { to{transform:rotate(360deg)} }
+</style>
+</head>
+<body>
+
+<div id="floaters"></div>
+<div id="sparkles"></div>
+<canvas id="confetti"></canvas>
+<button id="musicBtn" title="เปิด/ปิดเพลง">🎵</button>
+
+<div id="wishFlash">
+  <div class="wf-spark">✨</div>
+  <div class="wf-text" id="wfText"></div>
+</div>
+
+<!-- ========== 1 : OPEN GIFT ========== -->
+<div class="screen active" id="s1">
+  <h1>มีของมาส่งให้คุณเจนค่า~ 📦</h1>
+  <p style="margin-top:8px">ได้ยินว่าวันนี้เป็นวันพิเศษของใครบางคนนะ 👀</p>
+  <div class="giftbox" id="giftbox">🎁</div>
+  <div class="hint">👆 แตะกล่องเพื่อเปิดเลย!</div>
+</div>
+
+<!-- ========== 1.5 : SONG SELECT ========== -->
+<div class="screen" id="sSong">
+  <h2>เลือกเพลงประกอบก่อน~ 🎧</h2>
+  <p style="font-size:14px;color:#a06b7d">เลือกเองก็ได้ หรือจะให้โชคชะตาเลือกให้ก็ได้นะ</p>
+  <div class="song-grid" id="songGrid"></div>
+  <button class="dice-btn" id="diceBtn">🎲 สุ่มเพลงให้หน่อย</button>
+  <button class="btn" id="songNextBtn" style="visibility:hidden">ใช้เพลงนี้แหละ ไปต่อ! 🚀</button>
+</div>
+
+<!-- ========== 2 : CAKE ========== -->
+<div class="screen" id="s2">
+  <h2>ด่านที่ 1 — เป่าเค้ก! 🥳</h2>
+  <p>อธิษฐานในใจ แล้วแตะเทียนให้ครบทุกเล่มนะ ✨</p>
+  <div class="cake-wrap">
+    <div class="candles" id="candles"></div>
+    <div class="cake">🎂</div>
+  </div>
+  <p id="candleCount" style="color:#a06b7d">เหลืออีก 5 เล่ม</p>
+</div>
+
+<!-- ========== 3 : ENVELOPES ========== -->
+<div class="screen" id="s3">
+  <h2>ด่านที่ 2 — จับฉลากคำอวยพร 💌</h2>
+  <p>เลือกเปิดซองได้เลย เปิดครบทุกซองก็ได้นะ</p>
+  <div class="env-grid" id="envGrid"></div>
+  <button class="btn" id="envNextBtn" style="visibility:hidden">ไปด่านต่อไป! 🚀</button>
+</div>
+
+<!-- ========== 3.5 : QUIZ ========== -->
+<div class="screen" id="sQuiz">
+  <h2>ด่านที่ 3 — ควิซสายฟ้าแลบ ⚡</h2>
+  <p style="font-size:14px;color:#a06b7d">ตอบให้ถูกนะ มีรางวัลเป็นคำชม 😎</p>
+  <div class="quiz-card">
+    <div id="quizQ"></div>
+    <div id="quizOpts"></div>
+  </div>
+  <div id="quizDots"></div>
+</div>
+
+<!-- ========== 4 : HEART GAME ========== -->
+<div class="screen" id="s4">
+  <h2>ด่านที่ 4 — เก็บความสุข! 💖</h2>
+  <p>แตะเก็บหัวใจให้ครบ 10 ดวง<br>แต่ถ้าเจอสิ่งแย่ๆ <b>ห้ามจับ!</b> ปล่อยมันชิ่วๆ ไป 🧹</p>
+  <div id="scoreBar">💖 0 / 10</div>
+</div>
+<div id="gameArea"></div>
+
+<!-- ========== 4.5 : BALLOON HUNT ========== -->
+<div class="screen" id="sBalloon">
+  <h2>ด่านที่ 5 — ล่าลูกโป่งตัวอักษร 🎈</h2>
+  <p>จิ้มลูกโป่งเก็บตัวอักษรให้ครบ<br>แล้วดูซิว่าสะกดเป็นคำว่าอะไร 👀</p>
+  <div id="balloonSlots"></div>
+</div>
+<div id="balloonArea"></div>
+
+<!-- ========== 4.8 : SCRATCH CARD ========== -->
+<div class="screen" id="sScratch">
+  <h2>ด่านพิเศษ — บัตรขูดนำโชค 🎫</h2>
+  <p style="font-size:14px;color:#a06b7d">เอานิ้วขูดให้ทั่วเลย มีของแถมให้ด้วยนะ</p>
+  <div class="scratch-wrap">
+    <div class="coupon">
+      <div class="cp-title">🎟️ คูปองพิเศษวันเกิดคุณเจน</div>
+      <div class="cp-line">🤗 กอดฟรี 1 ครั้ง</div>
+      <div class="cp-line">🍰 มื้ออร่อย 1 มื้อ</div>
+      <div class="cp-line">👑 ตามใจสุดๆ 1 วันเต็ม</div>
+      <div class="cp-note">* ไม่มีวันหมดอายุ แลกได้ตลอดชีพ</div>
+    </div>
+    <canvas id="scratchCv"></canvas>
+  </div>
+  <button class="btn" id="scratchNextBtn" style="visibility:hidden">รับคูปองแล้ว ไปช้อปต่อ! 🛒</button>
+</div>
+
+<!-- ========== 5 : SHOP ========== -->
+<div class="screen scrolly" id="s5">
+  <div class="shop-head">
+    <div class="logo">🛒 Jane Birthday Mall</div>
+    <div class="shop-search">🔍 ค้นหาของขวัญสำหรับคนน่ารัก...</div>
+  </div>
+  <div class="shop-banner">🎉 BIRTHDAY SALE — ลด 100% ทุกชิ้น เฉพาะคุณเจนเท่านั้น! 🎉</div>
+  <div class="shop-note">เลือกของขวัญที่อยากได้ 1 ชิ้น แล้วกดสั่งซื้อได้เลย</div>
+  <div class="prod-grid" id="prodGrid"></div>
+</div>
+<div id="buyBar">
+  <div class="sel-name" id="selName"></div>
+  <button id="buyBtn">สั่งซื้อเลย</button>
+</div>
+
+<!-- ========== 6 : CHECKOUT ========== -->
+<div class="screen" id="s6">
+  <h2>สรุปคำสั่งซื้อ 🧾</h2>
+  <div class="receipt">
+    <div class="r-head">คำสั่งซื้อ #JANE-BD-2026</div>
+    <div class="r-body">
+      <div class="r-row"><span id="rcName">-</span><span id="rcPrice">-</span></div>
+      <div class="r-row discount"><span>ส่วนลดวันเกิดเจน (100%)</span><span id="rcDiscount">-</span></div>
+      <div class="r-row"><span>ค่าจัดส่ง (ส่งด้วยใจ 💝)</span><span>฿0</span></div>
+      <div class="r-row total"><span>เจนต้องจ่าย</span><span>฿0</span></div>
+      <div class="r-pay">💳 ช่องทางชำระเงิน: <b>รอยยิ้มของเจน 1 ครั้ง</b><br>(ยิ้มตอนนี้เลยนะ เดี๋ยวระบบตรวจไม่ผ่าน 😤)</div>
+    </div>
+  </div>
+  <button class="btn" id="confirmBtn">ยืนยันคำสั่งซื้อ 💝</button>
+</div>
+
+<!-- ========== 7 : FINAL LETTER ========== -->
+<div class="screen" id="s7">
+  <h2>💌 จดหมายถึงเจน 💌</h2>
+  <div class="wishbox" style="margin-top:16px">
+    <div id="wishText"></div><span class="cursor" id="wishCursor"></span>
+  </div>
+  <div id="finalBtns" style="visibility:hidden">
+    <!-- <button class="small-btn" id="copyBtn">📋 ก๊อปคำตอบไว้ส่งให้</button> -->
+    <button class="small-btn" id="fireBtn">🎆 ไปจุดพลุกัน!</button>
+    <button class="small-btn" id="replayBtn">🔄 เล่นใหม่</button>
+    <button class="small-btn" id="noBtn">มีอะไรจะบอกเมฆไหม 💬</button>
+  </div>
+</div>
+
+<!-- ========== 8 : FIREWORKS FINALE ========== -->
+<div class="screen" id="sFire">
+  <h2>HAPPY BIRTHDAY<br>JANE 💖</h2>
+  <p style="margin-top:10px">แตะตรงไหนก็ได้ พลุจะยิงตามนิ้วเลย 🎆</p>
+  <div style="margin-top:18px">
+    <button class="small-btn" id="backLetterBtn">💌 กลับไปอ่านจดหมาย</button>
+    <button class="small-btn" id="replayBtn2">🔄 เล่นใหม่ทั้งหมด</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+function show(id){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  $(id).classList.add('active');
+}
+let toastTimer;
+function toast(msg, ms=2800){
+  const t = $('#toast');
+  t.innerHTML = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), ms);
+}
+/* wish flash: โชว์คำอวยพรสั้นๆ คั่นระหว่างหน้า */
+function wishFlash(text, then){
+  const wf = $('#wishFlash');
+  $('#wfText').textContent = text;
+  wf.classList.add('show');
+  burst(innerWidth/2, innerHeight/3, 50);
+  setTimeout(()=>{
+    wf.classList.remove('show');
+    then && then();
+  }, 2200);
+}
+
+/* ================= background floaters ================= */
+const floatEmojis = ['🎈','💖','🌸','✨','🎀','💝','🦄','🌷','⭐','🧁'];
+const floatersEl = $('#floaters');
+for(let i=0;i<16;i++){
+  const f = document.createElement('div');
+  f.className = 'floater';
+  f.textContent = floatEmojis[i % floatEmojis.length];
+  f.style.left = Math.random()*95 + 'vw';
+  f.style.fontSize = (20 + Math.random()*22) + 'px';
+  f.style.animationDuration = (9 + Math.random()*10) + 's';
+  f.style.animationDelay = (Math.random()*12) + 's';
+  floatersEl.appendChild(f);
+}
+
+/* ================= confetti ================= */
+const cvs = $('#confetti'), ctx = cvs.getContext('2d');
+let parts = [];
+function resize(){ cvs.width = innerWidth; cvs.height = innerHeight; }
+addEventListener('resize', resize); resize();
+const colors = ['#ff6b9d','#ffd166','#06d6a0','#73c2fb','#c084fc','#ff9f68','#fff'];
+function burst(x = innerWidth/2, y = innerHeight/2, n = 90){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = 4 + Math.random()*9;
+    parts.push({
+      x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 4,
+      g:.18 + Math.random()*.1,
+      w:6+Math.random()*7, h:4+Math.random()*5,
+      r:Math.random()*Math.PI, vr:(Math.random()-.5)*.3,
+      c:colors[Math.floor(Math.random()*colors.length)],
+      life:90 + Math.random()*60
+    });
+  }
+}
+function rainConfetti(n=80){
+  for(let i=0;i<n;i++){
+    parts.push({
+      x:Math.random()*innerWidth, y:-20 - Math.random()*innerHeight*.5,
+      vx:(Math.random()-.5)*2, vy:2+Math.random()*3, g:.02,
+      w:6+Math.random()*7, h:4+Math.random()*5,
+      r:Math.random()*Math.PI, vr:(Math.random()-.5)*.25,
+      c:colors[Math.floor(Math.random()*colors.length)],
+      life:240
+    });
+  }
+}
+/* ----- พลุ (fireworks) ----- */
+let rockets = [];
+function launchRocket(x){
+  if(x === undefined) x = innerWidth * (0.15 + Math.random()*0.7);
+  rockets.push({
+    x, y: innerHeight + 10,
+    vx: (Math.random()-.5) * 1.4,
+    vy: -(10 + Math.random()*4),
+    targetY: innerHeight * (0.15 + Math.random()*0.3),
+    hue: Math.floor(Math.random()*360)
+  });
+}
+function explode(x, y, hue){
+  const n = 60 + Math.random()*30;
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = 1.5 + Math.random()*6.5;
+    parts.push({
+      x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, g:.045,
+      w:1.8+Math.random()*1.8, h:0, r:0, vr:0, shape:'dot',
+      c:`hsl(${hue + Math.random()*40 - 20},100%,${55 + Math.random()*25}%)`,
+      life:60 + Math.random()*55
+    });
+  }
+  for(let i=0;i<12;i++){
+    const a = Math.random()*Math.PI*2, sp = .5 + Math.random()*3;
+    parts.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, g:.03,
+      w:1.4, h:0, r:0, vr:0, shape:'dot', c:'#fff', life:80 + Math.random()*40 });
+  }
+  if(navigator.vibrate) navigator.vibrate(25);
+}
+(function loop(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  rockets = rockets.filter(r=>!r.done);
+  for(const r of rockets){
+    r.x += r.vx; r.y += r.vy; r.vy += .08;
+    if(r.y <= r.targetY || r.vy >= -1){
+      r.done = true;
+      explode(r.x, r.y, r.hue);
+    } else {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = `hsl(${r.hue},100%,75%)`;
+      ctx.fillRect(r.x-1.5, r.y, 3, 11);
+    }
+  }
+  parts = parts.filter(p=>p.life>0 && p.y < innerHeight+40);
+  for(const p of parts){
+    p.vy += p.g; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life--;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+    ctx.globalAlpha = Math.min(1, p.life/40);
+    ctx.fillStyle = p.c;
+    if(p.shape === 'dot'){
+      ctx.beginPath(); ctx.arc(0, 0, p.w, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    }
+    ctx.restore();
+  }
+  requestAnimationFrame(loop);
+})();
+
+/* ================= ประกายตอนแตะจอ (ทุกหน้า) ================= */
+const sparklesEl = $('#sparkles');
+const sparkEmojis = ['✨','💫','⭐','🌟','💖'];
+addEventListener('pointerdown', e=>{
+  if(sparklesEl.childElementCount > 36) return;
+  for(let i=0;i<4;i++){
+    const s = document.createElement('span');
+    s.className = 'spark';
+    s.textContent = sparkEmojis[Math.floor(Math.random()*sparkEmojis.length)];
+    s.style.left = (e.clientX - 9) + 'px';
+    s.style.top  = (e.clientY - 9) + 'px';
+    s.style.setProperty('--dx', (Math.random()*90 - 45) + 'px');
+    s.style.setProperty('--dy', (-(Math.random()*70) - 15) + 'px');
+    s.addEventListener('animationend', ()=> s.remove());
+    sparklesEl.appendChild(s);
+  }
+});
+
+/* ================= music (เพลงจริง เล่นวนตลอด) ================= */
+const SONGS = [
+  { title:'Best Part', artist:'Daniel Caesar ft. H.E.R.',
+    file:"Daniel Caesar - Best Part (Audio) ft. H.E.R.mp3", img:"best part.jpg" },
+  { title:'ดาวหางฮัลเลย์', artist:'fellow fellow',
+    file:"fellow fellow - ดาวหางฮัลเลย์ (Halley's Comet) [OFFICIAL VISUALIZER].mp3", img:"fellow fellow - ดาวหางฮัลเลย์.png" },
+  { title:'อีกแล้ว', artist:'MEYOU ft. Jigsaw',
+    file:"MEYOU - อีกแล้ว ft. Jigsaw.mp3", img:"meyou-อีกแล้ว.webp" },
+  { title:'I Love You 3000', artist:'Stephanie Poetri',
+    file:"Stephanie Poetri - I Love You 3000 (Official Music Video).mp3", img:"Stephanie Poetri - I Love You 3000.jpg" },
+  { title:'ดอกไม้และข้อความ', artist:'Velika',
+    file:"Velika - ดอกไม้และข้อความ.mp3", img:"Velika - ดอกไม้และข้อความ.jpg" },
+  { title:'ตาปาเฮ้', artist:'ซูลูปาก้า',
+    file:"ซูลูปาก้า ตาปาเฮ้.mp3", img:"ซูลูปาก้า ตาปาเฮ้.jpg" },
+];
+const HALLEY = 1; // ดวงเจนดีจัง สุ่มกี่ทีก็ได้เพลงนี้
+const bgm = new Audio();
+bgm.loop = true;
+let songChosen = false;
+
+const songGrid = $('#songGrid');
+const songCards = SONGS.map((s, i)=>{
+  const c = document.createElement('div');
+  c.className = 'song-card';
+  c.innerHTML = `<img src="${encodeURI(s.img)}" alt="" loading="lazy"><div class="sn-title">${s.title}</div><div class="sn-artist">${s.artist}</div>`;
+  c.addEventListener('click', ()=>{ if(!spinning) selectSong(i); });
+  songGrid.appendChild(c);
+  return c;
+});
+function selectSong(i){
+  songCards.forEach(c=>c.classList.remove('selected','hl'));
+  songCards[i].classList.add('selected');
+  bgm.src = encodeURI(SONGS[i].file);
+  bgm.play().catch(()=>{});
+  songChosen = true;
+  $('#musicBtn').classList.add('playing');
+  $('#musicBtn').textContent = '🎶';
+  $('#songNextBtn').style.visibility = 'visible';
+}
+let spinning = false;
+$('#diceBtn').addEventListener('click', function(){
+  if(spinning) return;
+  spinning = true;
+  this.disabled = true;
+  songCards.forEach(c=>c.classList.remove('selected'));
+  bgm.pause();
+  // หมุนรัวๆ แล้วหน่วงลงเรื่อยๆ... และไปหยุดที่ดาวหางฮัลเลย์ทุกครั้ง (ความลับนะ)
+  const steps = songCards.length * 3 + HALLEY; // จบที่ index HALLEY พอดี
+  let k = 0;
+  (function spin(){
+    songCards.forEach(c=>c.classList.remove('hl'));
+    songCards[k % songCards.length].classList.add('hl');
+    k++;
+    if(k <= steps){
+      setTimeout(spin, 70 + k*18);
+    } else {
+      spinning = false;
+      $('#diceBtn').disabled = false;
+      toast('โชคชะตาบอกว่า... ต้องเป็นเพลงนี้เลย 💫');
+      burst(innerWidth/2, innerHeight/2.5, 60);
+      selectSong(HALLEY);
+    }
+  })();
+});
+$('#songNextBtn').addEventListener('click', ()=>{
+  wishFlash('เพลงมาแล้ว~ ไปกันเลย 🎶', ()=> show('#s2'));
+});
+$('#musicBtn').addEventListener('click', function(){
+  if(!songChosen){ toast('เดี๋ยวมีให้เลือกเพลงก่อนน้า 🎧'); return; }
+  if(bgm.paused){ bgm.play().catch(()=>{}); } else { bgm.pause(); }
+  this.classList.toggle('playing', !bgm.paused);
+  this.textContent = bgm.paused ? '🎵' : '🎶';
+});
+
+/* ================= 1 : open gift ================= */
+$('#giftbox').addEventListener('click', function(){
+  this.style.animation = 'none';
+  this.textContent = '🎊';
+  const r = this.getBoundingClientRect();
+  burst(r.left+r.width/2, r.top+r.height/2, 120);
+  setTimeout(()=> wishFlash('วันนี้วันของเจน 🎀', ()=> show('#sSong')), 600);
+});
+
+/* ================= 2 : candles ================= */
+const candlesEl = $('#candles');
+let candlesLeft = 5;
+for(let i=0;i<5;i++){
+  const c = document.createElement('div');
+  c.className = 'candle';
+  c.innerHTML = '<div class="flame"></div><div class="stick"></div>';
+  c.addEventListener('click', function(){
+    if(this.classList.contains('out')) return;
+    this.classList.add('out');
+    candlesLeft--;
+    $('#candleCount').textContent = candlesLeft > 0 ? `เหลืออีก ${candlesLeft} เล่ม` : 'ครบแล้ว! เก่งมากกก 🎉';
+    if(candlesLeft === 0){
+      burst(innerWidth/2, innerHeight/2.4, 130);
+      rainConfetti(60);
+      setTimeout(()=> wishFlash('ขอให้ที่อธิษฐานไว้ เป็นจริงทุกข้อเลยนะ ✨', ()=> show('#s3')), 1200);
+    }
+  });
+  candlesEl.appendChild(c);
+}
+
+/* ================= 3 : envelopes ================= */
+const envWishes = [
+  'ขอให้สวยวันสวยคืน 💅',
+  'ขอให้เงินไหลเข้ากระเป๋ารัวๆ 💸',
+  'ขอให้กินเก่งแต่ไม่อ้วน 🍰',
+  'ขอให้เจอแต่คนน่ารักๆ ตลอดปี 🥰'
+];
+const envGrid = $('#envGrid');
+let envOpened = 0;
+envWishes.forEach(w=>{
+  const e = document.createElement('div');
+  e.className = 'env';
+  e.textContent = '💌';
+  e.addEventListener('click', function(){
+    if(this.classList.contains('opened')) return;
+    this.classList.add('opened');
+    this.textContent = w;
+    envOpened++;
+    const r = this.getBoundingClientRect();
+    burst(r.left+r.width/2, r.top+r.height/2, 35);
+    if(envOpened >= 1) $('#envNextBtn').style.visibility = 'visible';
+    if(envOpened === envWishes.length) toast('เปิดครบทุกซองเลย เก่งมาก! 🎉');
+  });
+  envGrid.appendChild(e);
+});
+$('#envNextBtn').addEventListener('click', ()=>{
+  wishFlash('ขอให้สมองปลอดโปร่ง คิดอะไรก็ลื่นปรื๊ดๆ 🧠✨', ()=>{ show('#sQuiz'); renderQuiz(); });
+});
+
+/* ================= 3.5 : quiz ================= */
+const QUIZ = [
+  { q:'คำถามแรก... วันนี้วันอะไรเอ่ย? 🤔',
+    opts:['วันจันทร์เซ็งๆ 😪','วันศุกร์ปาร์ตี้ 🍻','วันเกิดเจน 🎂'],
+    correct:[2], wrongToast:'ผิดดดด! คิดดีๆ ใหม่อีกที 😂' },
+  { q:'ใครน่ารักที่สุดในโลก? 👀',
+    opts:['เจน 💁‍♀️','คนชื่อเจน 😏','คุงเจงคงนี้งาย 🥰'],
+    correct:[0,1,2], allToast:'ถูกทุกข้อแหละจ้า ก็มันเรื่องจริง 🥰' },
+  { q:'ปีนี้เจนจะได้อะไรบ้าง? 🔮',
+    opts:['รวยขึ้นแบบงงๆ 💸','สวยขึ้นทุกวัน ✨','ความสุขเต็มกระเป๋า 💖'],
+    correct:[0,1,2], allToast:'เลือกข้อเดียวทำไม เอาไปหมดเลยจ้า!! 🎉' },
+];
+let quizIdx = 0, quizLock = false;
+const quizDots = $('#quizDots');
+QUIZ.forEach(()=> quizDots.appendChild(document.createElement('span')));
+function renderQuiz(){
+  quizLock = false;
+  const item = QUIZ[quizIdx];
+  $('#quizQ').textContent = item.q;
+  [...quizDots.children].forEach((d,i)=> d.classList.toggle('on', i === quizIdx));
+  const box = $('#quizOpts');
+  box.innerHTML = '';
+  item.opts.forEach((label, i)=>{
+    const b = document.createElement('button');
+    b.className = 'quiz-opt';
+    b.textContent = label;
+    b.addEventListener('click', ()=>{
+      if(quizLock) return;
+      if(!item.correct.includes(i)){
+        b.classList.remove('shake'); void b.offsetWidth;
+        b.classList.add('shake');
+        toast(item.wrongToast, 1800);
+        if(navigator.vibrate) navigator.vibrate(80);
+        return;
+      }
+      quizLock = true;
+      if(item.correct.length === item.opts.length){
+        [...box.children].forEach(c=>c.classList.add('right'));
+        toast(item.allToast, 2200);
+      } else {
+        b.classList.add('right');
+        toast('ถูกต้องนะค้าบบบ 🎉', 1500);
+      }
+      const r = b.getBoundingClientRect();
+      burst(r.left + r.width/2, r.top, 35);
+      setTimeout(()=>{
+        quizIdx++;
+        if(quizIdx < QUIZ.length){
+          renderQuiz();
+        } else {
+          wishFlash('ฉลาดสุดๆ! ความสุขกำลังตกลงมา รับให้ทันนะ 💖', ()=>{ show('#s4'); startGame(); });
+        }
+      }, 1500);
+    });
+    box.appendChild(b);
+  });
+}
+
+/* ================= 4 : heart game ================= */
+const gameArea = $('#gameArea');
+let score = 0, gameOn = false, spawnTimer = null;
+const goodDrops = ['💖','💕','❤️','💗'];
+const badDrops  = ['💩','🌧️','😈'];
+function startGame(){
+  if(gameOn) return;
+  gameOn = true; score = 0;
+  updateScore();
+  spawnTimer = setInterval(spawnDrop, 520);
+}
+function updateScore(){
+  $('#scoreBar').textContent = `💖 ${score} / 10`;
+}
+function spawnDrop(){
+  if(!gameOn) return;
+  const isBad = Math.random() < .28;
+  const d = document.createElement('div');
+  d.className = 'drop';
+  d.textContent = isBad ? badDrops[Math.floor(Math.random()*badDrops.length)]
+                        : goodDrops[Math.floor(Math.random()*goodDrops.length)];
+  d.style.left = (5 + Math.random()*85) + 'vw';
+  d.style.animationDuration = (3 + Math.random()*2.5) + 's';
+  d.addEventListener('pointerdown', function(ev){
+    ev.preventDefault();
+    if(this.classList.contains('caught')) return;
+    this.classList.add('caught');
+    if(isBad){
+      score = Math.max(0, score - 1);
+      toast('แย่ๆ ไม่เอา! ชิ่วๆ ไป๊ 🧹💨', 1500);
+      if(navigator.vibrate) navigator.vibrate(100);
+    } else {
+      score++;
+      const r = this.getBoundingClientRect();
+      burst(r.left+20, r.top+20, 12);
+    }
+    updateScore();
+    setTimeout(()=>this.remove(), 400);
+    if(score >= 10 && gameOn){
+      gameOn = false;
+      clearInterval(spawnTimer);
+      gameArea.innerHTML = '';
+      burst(innerWidth/2, innerHeight/2.5, 130);
+      setTimeout(()=> wishFlash('ขอให้ความสุขล้นๆ แบบนี้ทุกวันเลยนะ 🥰', ()=>{ show('#sBalloon'); startBalloons(); }), 900);
+    }
+  });
+  d.addEventListener('animationend', ()=> d.remove());
+  gameArea.appendChild(d);
+}
+
+/* ================= 4.5 : balloon hunt ================= */
+const LETTERS = ['J','A','N','E','💖'];
+const balloonArea = $('#balloonArea');
+const balloonSlots = $('#balloonSlots');
+const collected = new Set();
+let balloonTimer = null, balloonsOn = false;
+LETTERS.forEach(()=>{
+  const s = document.createElement('div');
+  s.className = 'slot';
+  s.textContent = '?';
+  balloonSlots.appendChild(s);
+});
+function startBalloons(){
+  if(balloonsOn) return;
+  balloonsOn = true;
+  balloonTimer = setInterval(spawnBalloon, 750);
+}
+function spawnBalloon(){
+  if(!balloonsOn || balloonArea.childElementCount > 9) return;
+  const remaining = LETTERS.filter(l=>!collected.has(l));
+  if(!remaining.length) return;
+  const letter = remaining[Math.floor(Math.random()*remaining.length)];
+  const b = document.createElement('div');
+  b.className = 'balloon';
+  b.innerHTML = `<span class="bl" style="filter:hue-rotate(${Math.floor(Math.random()*360)}deg)">🎈</span><span class="tag">${letter}</span>`;
+  b.style.left = (5 + Math.random()*80) + 'vw';
+  b.style.animationDuration = (4 + Math.random()*2.8) + 's';
+  b.addEventListener('pointerdown', function(ev){
+    ev.preventDefault();
+    if(this.classList.contains('popped')) return;
+    this.classList.add('popped');
+    const r = this.getBoundingClientRect();
+    burst(r.left + 32, r.top + 30, 22);
+    if(navigator.vibrate) navigator.vibrate(35);
+    if(!collected.has(letter)){
+      collected.add(letter);
+      const idx = LETTERS.indexOf(letter);
+      const slot = balloonSlots.children[idx];
+      slot.textContent = letter;
+      slot.classList.add('got');
+    }
+    setTimeout(()=> this.remove(), 320);
+    if(collected.size === LETTERS.length && balloonsOn){
+      balloonsOn = false;
+      clearInterval(balloonTimer);
+      setTimeout(()=>{
+        balloonArea.innerHTML = '';
+        burst(innerWidth/2, innerHeight/2.5, 130);
+        rainConfetti(60);
+        wishFlash('J-A-N-E ก็ชื่อเจนไง~ 💖 ขอให้โชคดีทั้งปีเลยนะ 🍀', ()=>{ show('#sScratch'); initScratch(); });
+      }, 700);
+    }
+  });
+  b.addEventListener('animationend', ()=> b.remove());
+  balloonArea.appendChild(b);
+}
+
+/* ================= 4.8 : scratch card ================= */
+let scratchInited = false, scratchDone = false;
+function initScratch(){
+  if(scratchInited) return;
+  scratchInited = true;
+  const cv = $('#scratchCv');
+  const wrap = cv.parentElement;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = w * dpr; cv.height = h * dpr;
+  const sc = cv.getContext('2d');
+  sc.scale(dpr, dpr);
+  const grad = sc.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, '#cfd3dc'); grad.addColorStop(.5, '#aab0bd'); grad.addColorStop(1, '#c6cad4');
+  sc.fillStyle = grad;
+  sc.fillRect(0, 0, w, h);
+  sc.fillStyle = '#7e8494';
+  sc.font = "700 20px 'Mali', sans-serif";
+  sc.textAlign = 'center';
+  sc.fillText('ขูดตรงนี้เลย ✨', w/2, h/2 - 8);
+  sc.font = "14px 'Mali', sans-serif";
+  sc.fillText('(เอานิ้วถูๆ ไปทั่วๆ)', w/2, h/2 + 18);
+  sc.globalCompositeOperation = 'destination-out';
+
+  let scratching = false, moves = 0;
+  function scrub(e){
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    sc.beginPath(); sc.arc(x, y, 24, 0, Math.PI*2); sc.fill();
+    moves++;
+    if(moves % 10 === 0) checkCleared();
+  }
+  function checkCleared(){
+    if(scratchDone) return;
+    const data = sc.getImageData(0, 0, cv.width, cv.height).data;
+    let clear = 0, total = 0;
+    for(let i = 3; i < data.length; i += 64){ total++; if(data[i] === 0) clear++; }
+    if(clear / total > .45){
+      scratchDone = true;
+      cv.classList.add('cleared');
+      burst(innerWidth/2, innerHeight/2.2, 100);
+      toast('ว้าว ขูดเจอคูปองใหญ่เลย! เก็บไว้ใช้ได้จริงนะ 🎉', 3000);
+      $('#scratchNextBtn').style.visibility = 'visible';
+    }
+  }
+  cv.addEventListener('pointerdown', e=>{ scratching = true; scrub(e); });
+  cv.addEventListener('pointermove', e=>{ if(scratching) scrub(e); });
+  addEventListener('pointerup', ()=> scratching = false);
+}
+$('#scratchNextBtn').addEventListener('click', ()=>{
+  wishFlash('ขอให้ดวงเฮงๆ แบบนี้ตลอดปีเลย 🍀 ไปช้อปกันต่อ!', ()=> show('#s5'));
+});
+
+/* ================= 5 : shop ================= */
+const WM = 'https://upload.wikimedia.org/wikipedia/commons/thumb/';
+const products = [
+  { emo:'🧸', bg:'#fdeef4', name:'ตุ๊กตาหมีตัวเบิ้ม 1 เมตร นุ่มฟู กอดฟิน', price:890,  old:1290, rate:4.9, sold:'2.3พัน', real:true,
+    img:WM+'d/d8/Costco_bear_93%27.jpg/500px-Costco_bear_93%27.jpg' },
+  { emo:'💄', bg:'#fff0ec', name:'เซ็ตเมคอัพ พาเลตต์ + แปรง ครบจบในกล่อง', price:759,  old:1100, rate:4.8, sold:'5.1พัน', real:true,
+    img:WM+'5/53/Make_Up_Set%2C_Palettes_and_Brushes_-_50921483638.jpg/500px-Make_Up_Set%2C_Palettes_and_Brushes_-_50921483638.jpg' },
+  { emo:'🌹', bg:'#fdeef4', name:'ช่อดอกไม้ช่อใหญ่ จัดสวย ถ่ายรูปขึ้นมาก', price:650,  old:890,  rate:5.0, sold:'987',   real:true,
+    img:WM+'4/44/Rose_and_carnation_flower_bouquet_01.jpg/500px-Rose_and_carnation_flower_bouquet_01.jpg' },
+  { emo:'👜', bg:'#f3eefc', name:'กระเป๋าสะพายหนัง ทรงหรู สายเกาหลี', price:1590, old:2190, rate:4.7, sold:'3.4พัน', real:true,
+    img:WM+'1/13/Kelly_Bag.jpg/500px-Kelly_Bag.jpg' },
+  { emo:'📱', bg:'#eef4fd', name:'iPhone 17 Pro Max 1TB สีใหม่ล่าสุด', price:48900, old:52900, rate:4.9, sold:'12พัน',
+    img:WM+'1/19/Apple_iPhone_15_Pro.jpg/500px-Apple_iPhone_15_Pro.jpg',
+    fails:['สินค้าหมดสต็อกจ้า เพิ่งมีคนกดตัดหน้าไปเมื่อกี้เลย 😭','ร้านแจ้งว่าล็อตใหม่เข้าปี 2030 รอไหวมั้ย 😇'] },
+  { emo:'🍲', bg:'#fff6ec', name:'บุฟเฟ่ต์ชาบูพรีเมียม 2 ที่ กินจุกๆ', price:998,  old:1390, rate:4.8, sold:'8.7พัน', real:true,
+    img:WM+'f/fb/Shabu_Shabu_photo_Don_Ramey_Logan.jpg/500px-Shabu_Shabu_photo_Don_Ramey_Logan.jpg' },
+  { emo:'🌸', bg:'#eefcf4', name:'น้ำหอมกลิ่นหรู ติดทนทั้งวัน', price:1450, old:1990, rate:4.9, sold:'6.2พัน', real:true,
+    img:WM+'7/7c/CHANEL_N%C2%B05.jpg/500px-CHANEL_N%C2%B05.jpg' },
+  { emo:'🚗', bg:'#eef4fd', name:'Mercedes-Benz ป้ายแดง ออกศูนย์', price:2890000, old:3190000, rate:5.0, sold:'3',
+    img:WM+'a/ac/MERCEDES-BENZ_C-CLASS_LWB_%28W206%29_China_%2817%29.jpg/500px-MERCEDES-BENZ_C-CLASS_LWB_%28W206%29_China_%2817%29.jpg',
+    fails:['ระบบขัดข้องค่ะ รถหนักเกินตะกร้า 🛒💥','คนขับรถส่งของลาออกกะทันหัน ส่งให้ไม่ได้จ้า 🏃💨'] },
+  { emo:'🎧', bg:'#f3eefc', name:'หูฟังไร้สาย เบสแน่น ใส่สบาย', price:1290, old:1890, rate:4.7, sold:'9.9พัน', real:true,
+    img:WM+'5/56/2023_S%C5%82uchawki_Sony_WI-XB400_%281%29.jpg/500px-2023_S%C5%82uchawki_Sony_WI-XB400_%281%29.jpg' },
+  { emo:'🏠', bg:'#fff6ec', name:'บ้านเดี่ยว 2 ชั้น พร้อมสระว่ายน้ำ', price:5990000, old:6500000, rate:4.9, sold:'1',
+    img:WM+'9/9e/Luxury_Holiday_House_Eagle_Bay_WA_2026.jpg/500px-Luxury_Holiday_House_Eagle_Bay_WA_2026.jpg',
+    fails:['โฉนดหายค่ะ แม่บ้านเก็บไว้ที่ไหนไม่รู้ 📄❌','กดสั่งได้ แต่โอนกรรมสิทธิ์ไม่ได้นะจ๊ะ 😇'] },
+  { emo:'💆‍♀️', bg:'#fdeef4', name:'คอร์สสปา + นวดหินร้อน 2 ชม.', price:1190, old:1690, rate:4.9, sold:'1.5พัน', real:true,
+    img:WM+'8/86/Hot_Stone_Massage_at_Witches_Falls_Cottages.jpg/500px-Hot_Stone_Massage_at_Witches_Falls_Cottages.jpg' },
+  { emo:'💍', bg:'#eefcf4', name:'แหวนเพชรแท้ 10 กะรัต น้ำงาม', price:1590000, old:1890000, rate:5.0, sold:'2',
+    img:WM+'d/dd/Diamond_Ring_2013.jpg/500px-Diamond_Ring_2013.jpg',
+    fails:['เพชรเม็ดนี้มีคนจองแล้วค่ะ (คนจองคือเจ้าของร้าน) 💍','ขอเปลี่ยนเป็นแหวนลูกอมได้มั้ย รสองุ่นนะ 🍬'] },
+  { emo:'🎬', bg:'#eef4fd', name:'ตั๋วหนัง 2 ที่ + ป๊อปคอร์นชุดใหญ่', price:480,  old:640,  rate:4.8, sold:'4.4พัน', real:true,
+    img:WM+'e/e2/Cinema_popcorn_bucket.jpg/500px-Cinema_popcorn_bucket.jpg' },
+  { emo:'🪙', bg:'#fff6ec', name:'ทองคำแท่ง 1 บาท ลายมังกร', price:43500, old:43900, rate:5.0, sold:'856',
+    img:WM+'6/60/Gold_Ingots_on_white_background.jpg/500px-Gold_Ingots_on_white_background.jpg',
+    fails:['ราคาทองขึ้นอีกแล้วจ้า ซื้อไม่ทัน 📈😭','ร้านทองปิดปรับปรุงชั่วคราว (ตลอดชีพ) 🙏'] },
+  { emo:'☕', bg:'#f3eefc', name:'Gift Card คาเฟ่สุดชิค มูลค่า 500.-', price:500,  old:500,  rate:4.9, sold:'7.8พัน', real:true,
+    img:WM+'9/9b/Coppa_Cafe_Latte_art%2C_Brisbane%2C_Queensland.jpg/500px-Coppa_Cafe_Latte_art%2C_Brisbane%2C_Queensland.jpg' },
+  { emo:'✈️', bg:'#fdeef4', name:'แพ็กเกจเที่ยวญี่ปุ่น 5 วัน 4 คืน', price:28900, old:35900, rate:4.9, sold:'1.2พัน',
+    img:WM+'3/36/Lake_Kawaguchiko_Sakura_Mount_Fuji_4.JPG/500px-Lake_Kawaguchiko_Sakura_Mount_Fuji_4.JPG',
+    fails:['วีซ่าไม่ผ่านจ้า เจ้าหน้าที่บอกว่ายิ้มน้อยไป 🛂','ไฟลท์เต็มยาวถึงปีหน้าเลยค่ะ ✈️😴'] },
+  { emo:'👟', bg:'#eef4fd', name:'รองเท้าผ้าใบสีขาว ทรงเกาหลี ใส่สบาย', price:1490, old:1990, rate:4.8, sold:'5.6พัน', real:true,
+    img:WM+'b/b4/A_pair_of_white_shoes.jpg/500px-A_pair_of_white_shoes.jpg' },
+  { emo:'⌚', bg:'#f3eefc', name:'นาฬิกา Rolex Submariner ของแท้', price:459000, old:512000, rate:5.0, sold:'4',
+    img:WM+'c/cd/Rolex-Submariner.jpg/500px-Rolex-Submariner.jpg',
+    fails:['ร้านขอดูประวัติการซื้อก่อนค่ะ (เจอแต่มาม่ากับลูกชิ้น) ⌚','ของแท้หมดจ้า เหลือแต่ Folex เอามั้ย 😬'] },
+  { emo:'🧋', bg:'#fff6ec', name:'ชานมไข่มุก เหมาๆ 10 แก้ว กินให้สะใจ', price:650, old:890, rate:4.9, sold:'15พัน', real:true,
+    img:WM+'5/53/Pearl_Milk_Tea_in_Chun_Shui_Tang.jpg/500px-Pearl_Milk_Tea_in_Chun_Shui_Tang.jpg' },
+  { emo:'🕯️', bg:'#fdeef4', name:'เทียนหอมกลิ่นละมุน จุดแล้วห้องหอมฟุ้ง', price:450, old:620, rate:4.8, sold:'3.1พัน', real:true,
+    img:WM+'b/bc/Candle_%28Unsplash%29.jpg/500px-Candle_%28Unsplash%29.jpg' },
+  { emo:'🛩️', bg:'#eef4fd', name:'เครื่องบินเจ็ทส่วนตัว Gulfstream G650', price:350000000, old:380000000, rate:5.0, sold:'1',
+    img:WM+'1/15/Gulfstream_G650%2C_Private_JP7661110.jpg/500px-Gulfstream_G650%2C_Private_JP7661110.jpg',
+    fails:['รันเวย์หน้าหมู่บ้านไม่ผ่านเทศบาลจ้า ✈️❌','นักบินลาหยุด บอกว่าจะไปงานวันเกิดเจนพอดี 😎'] },
+  { emo:'📸', bg:'#eefcf4', name:'กล้องอินสแตนท์ ถ่ายปุ๊บได้รูปปั๊บ', price:1890, old:2490, rate:4.7, sold:'2.8พัน', real:true,
+    img:WM+'7/7b/Fujifilm_Instax_Mini_10_P1110432.jpg/500px-Fujifilm_Instax_Mini_10_P1110432.jpg' },
+  { emo:'🥤', bg:'#fff0ec', name:'แก้วเก็บความเย็นสีพีช ปุ่มๆ น่ารัก', price:990, old:1290, rate:4.9, sold:'6.7พัน', real:true,
+    img:WM+'b/ba/A_basket_of_pink_tumblers_at_Safeway.jpg/500px-A_basket_of_pink_tumblers_at_Safeway.jpg' },
+  { emo:'🛥️', bg:'#f3eefc', name:'เรือยอชท์หรู พร้อมกัปตันส่วนตัว', price:89000000, old:99000000, rate:4.9, sold:'2',
+    img:WM+'9/9d/Stella-maris-luxury-yacht-gallery-10.jpg/500px-Stella-maris-luxury-yacht-gallery-10.jpg',
+    fails:['ที่จอดเรือเต็มค่ะ จอดคลองแสนแสบไปก่อนมั้ย 🚤','กัปตันเมาคลื่น ขอลาออกก่อนออกเรือ 🤢'] },
+  { emo:'💎', bg:'#fdeef4', name:'ต่างหูเงินแท้ ดีไซน์วินเทจ', price:590, old:790, rate:4.8, sold:'1.9พัน', real:true,
+    img:WM+'1/19/Silver_filigree_earrings_with_pearls_by_Delfino_Garc%C3%ADa_Esperanza.jpg/500px-Silver_filigree_earrings_with_pearls_by_Delfino_Garc%C3%ADa_Esperanza.jpg' },
+];
+const fmt = n => '฿' + n.toLocaleString('en-US');
+const prodGrid = $('#prodGrid');
+let selected = null, jokeTries = 0;
+
+products.forEach(p=>{
+  const card = document.createElement('div');
+  card.className = 'prod';
+  card.innerHTML = `
+    <div class="prod-img" style="background:${p.bg}">${p.img ? `<img src="${p.img}" alt="" loading="lazy">` : p.emo}<span class="ship">ส่งฟรี</span></div>
+    <div class="prod-info">
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-price">${fmt(p.price)}${p.old>p.price ? ' <s>'+fmt(p.old)+'</s>' : ''}</div>
+      <div class="prod-meta"><span class="star">★</span> ${p.rate} | ขายแล้ว ${p.sold} ชิ้น</div>
+    </div>
+    <div class="loadbar"><div class="spinner"></div><span>กำลังหยิบใส่ตะกร้า...</span></div>`;
+  const loadbar = card.querySelector('.loadbar');
+  const im = card.querySelector('.prod-img img');
+  if(im) im.addEventListener('error', ()=>{ im.replaceWith(document.createTextNode(p.emo)); });
+  let failIdx = 0, busy = false;
+
+  card.addEventListener('click', ()=>{
+    if(busy) return;
+    if(p.real){
+      document.querySelectorAll('.prod').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      selected = p;
+      $('#selName').innerHTML = `${p.emo} ${p.name}<br><b style="color:#ee4d2d;font-family:sans-serif">${fmt(p.price)}</b>`;
+      $('#buyBar').classList.add('on');
+      const r = card.getBoundingClientRect();
+      burst(r.left+r.width/2, Math.max(60, r.top+r.height/2), 25);
+    } else {
+      busy = true;
+      loadbar.classList.add('on');
+      setTimeout(()=>{
+        loadbar.classList.remove('on');
+        busy = false;
+        jokeTries++;
+        if(jokeTries >= 10){
+          toast('โอเค ขอสารภาพ... งบพี่มีไม่ถึง 2,000 จ้าาา 😭<br>เลือกชิ้นที่ราคาน่ารักๆ เถอะนะ 🥺', 3500);
+        } else {
+          toast(p.fails[failIdx % p.fails.length], 3200);
+          failIdx++;
+        }
+        if(navigator.vibrate) navigator.vibrate(80);
+      }, 1100 + Math.random()*600);
+    }
+  });
+  prodGrid.appendChild(card);
+});
+
+$('#buyBtn').addEventListener('click', ()=>{
+  if(!selected) return;
+  $('#buyBar').classList.remove('on');
+  $('#rcName').textContent = `${selected.emo} ${selected.name}`;
+  $('#rcPrice').textContent = fmt(selected.price);
+  $('#rcDiscount').textContent = '-' + fmt(selected.price);
+  show('#s6');
+  burst(innerWidth/2, innerHeight/3, 80);
+});
+
+/* ================= 6 : checkout ================= */
+$('#confirmBtn').addEventListener('click', ()=>{
+  try { localStorage.setItem('jane-gift', JSON.stringify({ gift:selected.name, emo:selected.emo, price:selected.price, at:new Date().toISOString() })); } catch(e){}
+  burst(innerWidth/2, innerHeight/3, 140);
+  rainConfetti(100);
+  wishFlash('สั่งซื้อสำเร็จ! 🎉 ของขวัญกำลังเดินทางไปหาเจน', ()=>{ show('#s7'); startWish(); });
+});
+
+/* ================= 7 : final letter ================= */
+const wishMsg =
+`ถึง เจน 💌
+
+สุขสันต์วันเกิดนะ 🎂
+
+ขอให้ปีนี้เป็นปีที่ดีของเจน
+มีแต่สิ่งดีๆ เข้ามาในชีวิต
+เจอแต่เรื่องดีๆ คนดีๆ
+
+ส่วนสิ่งแย่ๆ ทั้งหลาย
+ไปไกลๆ เลย ชิ่วววว 🧹💨
+
+ขอให้สุขภาพแข็งแรง
+ยิ้มเยอะๆ หัวเราะบ่อยๆ
+มีความสุขมากๆ นะ
+
+สุขสันต์วันเกิดอีกครั้งนะค้าบบ 🎉
+HBD งับอ้วงง 💖`;
+let wishStarted = false;
+function startWish(){
+  if(wishStarted) return;
+  wishStarted = true;
+  const el = $('#wishText');
+  const box = el.parentElement;
+  let i = 0;
+  (function type(){
+    if(i <= wishMsg.length){
+      el.textContent = wishMsg.slice(0, i);
+      box.scrollTop = box.scrollHeight;
+      i++;
+      setTimeout(type, wishMsg[i-1] === '\n' ? 200 : 50);
+    } else {
+      $('#wishCursor').style.display = 'none';
+      $('#finalBtns').style.visibility = 'visible';
+      burst(innerWidth/2, innerHeight/3, 90);
+      rainConfetti(70);
+    }
+  })();
+}
+$('#copyBtn').addEventListener('click', async ()=>{
+  const text = `🎂 เจนเลือกของขวัญ: ${selected ? selected.emo+' '+selected.name+' ('+fmt(selected.price)+')' : '-'}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('ก๊อปแล้ว! ส่งไปบอกคนทำเว็บได้เลย 📨');
+  } catch(e){
+    toast('ก๊อปไม่ได้ งั้นแคปหน้าจอส่งมาแทนนะ 📸');
+  }
+});
+$('#replayBtn').addEventListener('click', ()=> location.reload());
+
+/* ================= ข้อความถึงเมฆ ================= */
+$('#noBtn').addEventListener('click', ()=>{
+  const msg = prompt('มีอะไรอยากบอกเมฆไหม พิมพ์ไว้ตรงนี้ได้เลยนะ 💬');
+  if(!msg || !msg.trim()){
+    toast('ไม่เป็นไร เมฆรอฟังได้เสมอนะ ☁️');
+    return;
+  }
+  const text = `ข้อความจากเจนถึงเมฆ 💬\n\n${msg.trim()}`;
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('ก๊อปข้อความถึงเมฆไว้ให้แล้ว ส่งต่อได้เลยนะ 📨', 3000);
+    burst(innerWidth/2, innerHeight/3, 80);
+  }).catch(()=>{
+    toast('ก๊อปอัตโนมัติไม่ได้ แต่เมฆอยากฟังข้อความนี้แน่นอนนะ 💖', 3200);
+  });
+});
+
+/* ================= 8 : fireworks finale ================= */
+const fireScreen = $('#sFire');
+for(let i=0;i<26;i++){
+  const st = document.createElement('span');
+  st.className = 'star';
+  const sz = 1 + Math.random()*2.2;
+  st.style.width = st.style.height = sz + 'px';
+  st.style.left = Math.random()*100 + '%';
+  st.style.top  = Math.random()*70 + '%';
+  st.style.animationDelay = Math.random()*2.4 + 's';
+  fireScreen.appendChild(st);
+}
+function goFireworks(){
+  show('#sFire');
+  launchRocket(); launchRocket(); launchRocket();
+}
+$('#fireBtn').addEventListener('click', ()=>{
+  wishFlash('ปิดท้ายด้วย... พลุชุดใหญ่ 🎆', goFireworks);
+});
+$('#backLetterBtn').addEventListener('click', ()=> show('#s7'));
+$('#replayBtn2').addEventListener('click', ()=> location.reload());
+fireScreen.addEventListener('pointerdown', e=>{
+  if(e.target.closest('button')) return;
+  launchRocket(e.clientX);
+});
+setInterval(()=>{ if(fireScreen.classList.contains('active')) launchRocket(); }, 1000);
+</script>
+</body>
+</html>
