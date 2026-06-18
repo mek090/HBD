@@ -688,17 +688,13 @@ function collectData(type, detail = {}){
       JOURNEY.currentStage = 'ตอบคำถามครบ';
       break;
     case 'heart_game_started':
-      JOURNEY.currentStage = 'เกมเก็บหัวใจ';
-      update.heartScore = JOURNEY.heartScore;
+      shouldSend = false;
       break;
     case 'heart_drop_caught':
-      JOURNEY.heartScore = Number(detail.score || 0);
-      update.heartScore = JOURNEY.heartScore;
+      shouldSend = false;
       break;
     case 'heart_game_completed':
-      JOURNEY.currentStage = 'เกมหัวใจสำเร็จ';
-      JOURNEY.heartScore = Number(detail.score || 0);
-      update.heartScore = JOURNEY.heartScore;
+      shouldSend = false;
       break;
     case 'scratch_card_completed':
       JOURNEY.currentStage = 'ขูดคูปองสำเร็จ';
@@ -1502,18 +1498,28 @@ function goFireworks(){
   closeCloudModal();
   collectData('fireworks_opened');
   show('#sFire');
-  launchRocket(); launchRocket(); launchRocket();
+  rockets = [];
+  launchRocket(innerWidth * .25);
+  setTimeout(()=>launchRocket(innerWidth * .5), 180);
+  setTimeout(()=>launchRocket(innerWidth * .75), 360);
 }
 $('#fireBtn').addEventListener('click', ()=>{
   goFireworks();
 });
-$('#backLetterBtn').addEventListener('click', ()=> show('#s7'));
-$('#replayBtn2').addEventListener('click', ()=> location.reload());
+$('#backLetterBtn').addEventListener('click', ()=>{
+  rockets = [];
+  show('#s7');
+});
+const replayBtn2 = $('#replayBtn2');
+if(replayBtn2) replayBtn2.addEventListener('click', ()=> location.reload());
 fireScreen.addEventListener('pointerdown', e=>{
   if(e.target.closest('button')) return;
+  e.preventDefault();
   launchRocket(e.clientX);
 });
-setInterval(()=>{ if(fireScreen.classList.contains('active')) launchRocket(); }, 1000);
+setInterval(()=>{
+  if(fireScreen.classList.contains('active') && rockets.length < 5) launchRocket();
+}, 1100);
 </script>
 </body>
 </html>
