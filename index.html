@@ -545,11 +545,15 @@
 const $ = s => document.querySelector(s);
 
 /* ================= data collection =================
-   ใส่ URL รับข้อมูลตรงนี้ เช่น Google Apps Script / Formspree / webhook
+   หลัง Deploy ไฟล์ google-apps-script/Code.gs ให้ใส่ Web app URL ตรงนี้
    ถ้ายังเว้นว่างไว้ เว็บจะเก็บข้อมูลไว้ใน localStorage ของเครื่องที่เปิดเว็บก่อน */
-const DATA_ENDPOINT = '';
+const DATA_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwb_ZanbYt62i_2a3g6Qnv6yxiZlTt64YwdJ4KH8b1Kwmh-Z_TnFbxi3vZ0QvOoBtTg/exec';
 const DATA_KEY = 'jane-birthday-events';
+const DATA_QUEUE_KEY = 'jane-birthday-pending-events';
+const DATA_SYNC_KEY = 'jane-birthday-synced-v2';
 const VISITOR_KEY = 'jane-birthday-visitor';
+const SESSION_ID = (crypto.randomUUID && crypto.randomUUID()) || ('s-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+const PAGE_OPENED_AT = Date.now();
 function visitorId(){
   try {
     let id = localStorage.getItem(VISITOR_KEY);
@@ -566,39 +570,112 @@ function saveEvent(ev){
   try {
     const list = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
     list.push(ev);
-    localStorage.setItem(DATA_KEY, JSON.stringify(list.slice(-250)));
+    localStorage.setItem(DATA_KEY, JSON.stringify(list.slice(-5000)));
   } catch(e){}
 }
-function sendEvent(ev){
-  if(!DATA_ENDPOINT) return;
-  const body = JSON.stringify(ev);
+function queueEvent(ev){
   try {
-    if(navigator.sendBeacon){
-      const blob = new Blob([body], { type:'text/plain;charset=UTF-8' });
-      if(navigator.sendBeacon(DATA_ENDPOINT, blob)) return;
-    }
+    const queue = JSON.parse(localStorage.getItem(DATA_QUEUE_KEY) || '[]');
+    if(!queue.some(item=>item.eventId === ev.eventId)) queue.push(ev);
+    localStorage.setItem(DATA_QUEUE_KEY, JSON.stringify(queue.slice(-1000)));
   } catch(e){}
-  fetch(DATA_ENDPOINT, {
-    method:'POST',
-    mode:'no-cors',
-    keepalive:true,
-    headers:{ 'Content-Type':'text/plain;charset=UTF-8' },
-    body
-  }).catch(()=>{});
+}
+function removeQueuedEvent(eventId){
+  try {
+    const queue = JSON.parse(localStorage.getItem(DATA_QUEUE_KEY) || '[]');
+    localStorage.setItem(DATA_QUEUE_KEY, JSON.stringify(queue.filter(ev=>ev.eventId !== eventId)));
+  } catch(e){}
+}
+let sendingEvent = false;
+function sendEvent(ev, fromQueue = false){
+  if(!DATA_ENDPOINT) return;
+  if(!fromQueue) queueEvent(ev);
+  flushEventQueue();
+}
+function transmitEvent(ev){
+  const url = DATA_ENDPOINT
+    + '?data=' + encodeURIComponent(JSON.stringify(ev))
+    + '&_=' + encodeURIComponent(ev.eventId);
+  return fetch(url, {
+    method:'GET',
+    cache:'no-store'
+  }).then(response=>response.json()).then(result=>{
+    if(!result || result.ok !== true || (typeof result.saved !== 'number' && typeof result.duplicated !== 'number')){
+      throw new Error('Collector has not been updated');
+    }
+    return result;
+  });
+}
+function flushEventQueue(){
+  if(!DATA_ENDPOINT || !navigator.onLine || sendingEvent) return;
+  try {
+    const queue = JSON.parse(localStorage.getItem(DATA_QUEUE_KEY) || '[]');
+    const ev = queue[0];
+    if(!ev) return;
+    sendingEvent = true;
+    let sent = false;
+    transmitEvent(ev)
+      .then(()=>{
+        sent = true;
+        removeQueuedEvent(ev.eventId);
+      })
+      .catch(()=>{})
+      .finally(()=>{
+        sendingEvent = false;
+        setTimeout(flushEventQueue, sent ? 120 : 5000);
+      });
+  } catch(e){}
+}
+function recoverSavedEvents(){
+  if(!DATA_ENDPOINT) return;
+  try {
+    if(localStorage.getItem(DATA_SYNC_KEY) === DATA_ENDPOINT) return;
+    const saved = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
+    saved.forEach(queueEvent);
+    localStorage.setItem(DATA_SYNC_KEY, DATA_ENDPOINT);
+  } catch(e){}
 }
 function collectData(type, detail = {}){
   const ev = {
+    eventId:(crypto.randomUUID && crypto.randomUUID()) || ('e-' + Date.now() + '-' + Math.random().toString(16).slice(2)),
     type, detail,
     at:new Date().toISOString(),
     visitorId:visitorId(),
+    sessionId:SESSION_ID,
     url:location.href,
     title:document.title,
     screen:[innerWidth, innerHeight],
-    ua:navigator.userAgent
+    ua:navigator.userAgent,
+    language:navigator.language || '',
+    platform:navigator.platform || '',
+    timezone:Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    referrer:document.referrer || '',
+    online:navigator.onLine
   };
   saveEvent(ev);
   sendEvent(ev);
 }
+addEventListener('online', ()=>{
+  collectData('connection_online');
+  flushEventQueue();
+});
+addEventListener('offline', ()=> collectData('connection_offline'));
+document.addEventListener('visibilitychange', ()=>{
+  collectData(document.hidden ? 'page_hidden' : 'page_visible', {
+    durationSeconds:Math.round((Date.now() - PAGE_OPENED_AT) / 1000)
+  });
+});
+addEventListener('pagehide', ()=>{
+  collectData('page_closed', {
+    durationSeconds:Math.round((Date.now() - PAGE_OPENED_AT) / 1000)
+  });
+});
+collectData('page_opened', {
+  viewport:{ width:innerWidth, height:innerHeight },
+  devicePixelRatio:window.devicePixelRatio || 1
+});
+recoverSavedEvents();
+flushEventQueue();
 function show(id){
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   $(id).classList.add('active');
@@ -825,14 +902,20 @@ $('#songNextBtn').addEventListener('click', ()=>{
   wishFlash('เพลงมาแล้ว~ ไปกันเลย 🎶', ()=> show('#s2'));
 });
 $('#musicBtn').addEventListener('click', function(){
-  if(!songChosen){ toast('เดี๋ยวมีให้เลือกเพลงก่อนน้า 🎧'); return; }
+  if(!songChosen){
+    collectData('music_toggle_blocked', { reason:'no_song_selected' });
+    toast('เดี๋ยวมีให้เลือกเพลงก่อนน้า 🎧');
+    return;
+  }
   if(bgm.paused){ bgm.play().catch(()=>{}); } else { bgm.pause(); }
   this.classList.toggle('playing', !bgm.paused);
   this.textContent = bgm.paused ? '🎵' : '🎶';
+  collectData('music_toggled', { playing:!bgm.paused, currentTime:Math.round(bgm.currentTime || 0) });
 });
 
 /* ================= 1 : open gift ================= */
 $('#giftbox').addEventListener('click', function(){
+  collectData('gift_box_opened');
   this.style.animation = 'none';
   this.textContent = '🎊';
   const r = this.getBoundingClientRect();
@@ -851,8 +934,10 @@ for(let i=0;i<5;i++){
     if(this.classList.contains('out')) return;
     this.classList.add('out');
     candlesLeft--;
+    collectData('candle_blown', { candleIndex:i, candlesLeft });
     $('#candleCount').textContent = candlesLeft > 0 ? `เหลืออีก ${candlesLeft} เล่ม` : 'ครบแล้ว! เก่งมากกก 🎉';
     if(candlesLeft === 0){
+      collectData('candles_completed');
       burst(innerWidth/2, innerHeight/2.4, 130);
       rainConfetti(60);
       setTimeout(()=> wishFlash('ขอให้ที่อธิษฐานไว้ เป็นจริงทุกข้อเลยนะ ✨', ()=> show('#s3')), 1200);
@@ -870,7 +955,7 @@ const envWishes = [
 ];
 const envGrid = $('#envGrid');
 let envOpened = 0;
-envWishes.forEach(w=>{
+envWishes.forEach((w, wishIndex)=>{
   const e = document.createElement('div');
   e.className = 'env';
   e.textContent = '💌';
@@ -879,6 +964,7 @@ envWishes.forEach(w=>{
     this.classList.add('opened');
     this.textContent = w;
     envOpened++;
+    collectData('envelope_opened', { wishIndex, wish:w, openedCount:envOpened });
     const r = this.getBoundingClientRect();
     burst(r.left+r.width/2, r.top+r.height/2, 35);
     if(envOpened >= 1) $('#envNextBtn').style.visibility = 'visible';
@@ -918,7 +1004,15 @@ function renderQuiz(){
     b.textContent = label;
     b.addEventListener('click', ()=>{
       if(quizLock) return;
-      if(!item.correct.includes(i)){
+      const correct = item.correct.includes(i);
+      collectData('quiz_answered', {
+        questionIndex:quizIdx,
+        question:item.q,
+        answerIndex:i,
+        answer:label,
+        correct
+      });
+      if(!correct){
         b.classList.remove('shake'); void b.offsetWidth;
         b.classList.add('shake');
         toast(item.wrongToast, 1800);
@@ -940,6 +1034,7 @@ function renderQuiz(){
         if(quizIdx < QUIZ.length){
           renderQuiz();
         } else {
+          collectData('quiz_completed', { questions:QUIZ.length });
           wishFlash('ฉลาดสุดๆ! ความสุขกำลังตกลงมา รับให้ทันนะ 💖', ()=>{ show('#s4'); startGame(); });
         }
       }, 1500);
@@ -956,6 +1051,7 @@ const badDrops  = ['💩','🌧️','😈'];
 function startGame(){
   if(gameOn) return;
   gameOn = true; score = 0;
+  collectData('heart_game_started');
   updateScore();
   spawnTimer = setInterval(spawnDrop, 520);
 }
@@ -984,11 +1080,13 @@ function spawnDrop(){
       const r = this.getBoundingClientRect();
       burst(r.left+20, r.top+20, 12);
     }
+    collectData('heart_drop_caught', { kind:isBad ? 'bad' : 'good', emoji:this.textContent, score });
     updateScore();
     setTimeout(()=>this.remove(), 400);
     if(score >= 10 && gameOn){
       gameOn = false;
       clearInterval(spawnTimer);
+      collectData('heart_game_completed', { score });
       gameArea.innerHTML = '';
       burst(innerWidth/2, innerHeight/2.5, 130);
       setTimeout(()=> wishFlash('ขอให้ความสุขล้นๆ แบบนี้ทุกวันเลยนะ 🥰', ()=>{ show('#sScratch'); initScratch(); }), 900);
@@ -1037,6 +1135,7 @@ function initScratch(){
     for(let i = 3; i < data.length; i += 64){ total++; if(data[i] === 0) clear++; }
     if(clear / total > .45){
       scratchDone = true;
+      collectData('scratch_card_completed', { clearedRatio:Number((clear / total).toFixed(3)) });
       cv.classList.add('cleared');
       burst(innerWidth/2, innerHeight/2.2, 100);
       toast('ว้าว ขูดเจอคูปองใหญ่เลย! เก็บไว้ใช้ได้จริงนะ 🎉', 3000);
@@ -1271,16 +1370,10 @@ $('#cloudSendBtn').addEventListener('click', ()=>{
     cloudMsg.focus();
     return;
   }
-  const text = `ข้อความจากเจนถึงเมฆ 💬\n\n${msg}`;
   collectData('cloud_message_submitted', { message:msg });
-  navigator.clipboard.writeText(text).then(()=>{
-    closeCloudModal();
-    toast('ก๊อปข้อความถึงเมฆไว้ให้แล้ว ส่งต่อได้เลยนะ 📨', 3000);
-    burst(innerWidth/2, innerHeight/3, 80);
-  }).catch(()=>{
-    closeCloudModal();
-    toast('ก๊อปอัตโนมัติไม่ได้ แต่เมฆอยากฟังข้อความนี้แน่นอนนะ 💖', 3200);
-  });
+  closeCloudModal();
+  toast('ส่งข้อความถึงเมฆแล้วนะ 📨', 3000);
+  burst(innerWidth/2, innerHeight/3, 80);
 });
 cloudModal.addEventListener('click', e=>{
   if(e.target === cloudModal) closeCloudModal();
