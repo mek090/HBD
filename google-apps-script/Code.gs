@@ -132,37 +132,48 @@ function findSessionRow_(sheet, sessionId) {
 
 function upsertJourney_(sheet, event) {
   const detail = event.detail || {};
-  const row = [
-    new Date(),
-    detail.startedAt || event.at || '',
-    event.visitorId || '',
-    event.sessionId || '',
-    detail.currentStage || '',
-    detail.status || '',
-    detail.song || '',
-    detail.candles || '0/5',
-    (detail.envelopes || []).join('\n'),
-    formatQuiz_(detail.quizAnswers || []),
-    Number(detail.heartScore || 0),
-    detail.scratch ? 'สำเร็จ' : 'ยัง',
-    detail.gift || '',
-    detail.giftPrice === '' ? '' : Number(detail.giftPrice || 0),
-    detail.messageToMek || '',
-    detail.fireworks ? 'ดูแล้ว' : 'ยัง',
-    Number(detail.durationSeconds || 0),
-    `${event.platform || ''} | ${event.ua || ''}`,
-    event.referrer || '',
-  ];
-  const targetRow = findSessionRow_(sheet, event.sessionId) || sheet.getLastRow() + 1;
+  const existingRow = findSessionRow_(sheet, event.sessionId);
+  const targetRow = existingRow || sheet.getLastRow() + 1;
+  const row = existingRow
+    ? sheet.getRange(existingRow, 1, 1, HEADERS.length).getValues()[0]
+    : ['', event.at || '', event.visitorId || '', event.sessionId || '', '', 'กำลังเล่น',
+       '', '0/5', '', '', 0, 'ยัง', '', '', '', 'ยัง', 0,
+       `${event.platform || ''} | ${event.ua || ''}`, event.referrer || ''];
+
+  row[0] = new Date();
+  if (detail.startedAt !== undefined) row[1] = detail.startedAt;
+  row[2] = event.visitorId || row[2];
+  row[3] = event.sessionId || row[3];
+  if (detail.currentStage !== undefined) row[4] = detail.currentStage;
+  if (detail.status !== undefined) row[5] = detail.status;
+  if (detail.song !== undefined) row[6] = detail.song;
+  if (detail.candles !== undefined) row[7] = detail.candles;
+  if (detail.latestEnvelope) row[8] = appendUniqueLine_(row[8], detail.latestEnvelope);
+  if (detail.latestQuizAnswer) row[9] = appendQuiz_(row[9], detail.latestQuizAnswer);
+  if (detail.heartScore !== undefined) row[10] = Number(detail.heartScore || 0);
+  if (detail.scratch !== undefined) row[11] = detail.scratch ? 'สำเร็จ' : 'ยัง';
+  if (detail.gift !== undefined) row[12] = detail.gift;
+  if (detail.giftPrice !== undefined) row[13] = Number(detail.giftPrice || 0);
+  if (detail.messageToMek !== undefined) row[14] = detail.messageToMek;
+  if (detail.fireworks !== undefined) row[15] = detail.fireworks ? 'ดูแล้ว' : 'ยัง';
+  if (detail.durationSeconds !== undefined) row[16] = Number(detail.durationSeconds || 0);
+
   sheet.getRange(targetRow, 1, 1, HEADERS.length).setValues([row]);
   sheet.getRange(targetRow, 9, 1, 2).setWrap(true);
   sheet.getRange(targetRow, 15).setWrap(true);
 }
 
-function formatQuiz_(answers) {
-  return answers.map((answer, index) =>
-    `${index + 1}. ${answer.answer || '-'} ${answer.correct ? '✓' : '✗'}`
-  ).join('\n');
+function appendUniqueLine_(current, value) {
+  const lines = String(current || '').split('\n').filter(Boolean);
+  if (value && lines.indexOf(value) === -1) lines.push(value);
+  return lines.join('\n');
+}
+
+function appendQuiz_(current, answer) {
+  const lines = String(current || '').split('\n').filter(Boolean);
+  const text = `${lines.length + 1}. ${answer.answer || '-'} ${answer.correct ? '✓' : '✗'}`;
+  lines.push(text);
+  return lines.join('\n');
 }
 
 function json_(data) {
