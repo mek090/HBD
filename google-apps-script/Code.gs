@@ -1,22 +1,25 @@
-const SHEET_NAME = 'Events';
+const SHEET_NAME = 'Play Summary';
 const SPREADSHEET_NAME = 'Jane Birthday Data';
 const HEADERS = [
-  'receivedAt',
-  'eventId',
-  'eventAt',
-  'type',
-  'visitorId',
-  'sessionId',
-  'detail',
-  'url',
-  'title',
-  'screen',
-  'language',
-  'platform',
-  'timezone',
-  'referrer',
-  'online',
-  'userAgent'
+  'อัปเดตล่าสุด',
+  'เริ่มเล่น',
+  'Visitor ID',
+  'Session ID',
+  'ด่านล่าสุด',
+  'สถานะ',
+  'เพลงที่เลือก',
+  'เป่าเทียน',
+  'คำอวยพรที่เปิด',
+  'คำตอบ Quiz',
+  'คะแนนหัวใจ',
+  'ขูดคูปอง',
+  'ของขวัญ',
+  'ราคา',
+  'ข้อความถึงเมฆ',
+  'ดูพลุ',
+  'เวลาเล่น (วินาที)',
+  'อุปกรณ์',
+  'มาจาก'
 ];
 
 function doGet(e) {
@@ -63,16 +66,13 @@ function saveEvents_(events) {
   lock.waitLock(10000);
   try {
     const sheet = getEventSheet_();
-    const existingIds = getExistingEventIds_(sheet, events);
-    const rows = events
-      .filter(event => event && event.eventId && !existingIds.has(event.eventId))
-      .map(toRow_);
-
-    if (rows.length) {
-      sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
-    }
-
-    return { saved: rows.length, duplicated: events.length - rows.length };
+    let saved = 0;
+    events.forEach(event => {
+      if (!event || event.type !== 'journey_update' || !event.sessionId) return;
+      upsertJourney_(sheet, event);
+      saved++;
+    });
+    return { saved: saved, duplicated: events.length - saved };
   } finally {
     lock.releaseLock();
   }
@@ -120,40 +120,49 @@ function getEventSheet_() {
   return sheet;
 }
 
-function getExistingEventIds_(sheet, events) {
-  const requested = new Set(events.map(event => event && event.eventId).filter(Boolean));
-  const existing = new Set();
+function findSessionRow_(sheet, sessionId) {
   const lastRow = sheet.getLastRow();
-
-  if (!requested.size || lastRow < 2) return existing;
-
-  const firstRow = Math.max(2, lastRow - 4999);
-  const values = sheet.getRange(firstRow, 2, lastRow - firstRow + 1, 1).getDisplayValues();
-  values.forEach(row => {
-    if (requested.has(row[0])) existing.add(row[0]);
-  });
-  return existing;
+  if (lastRow < 2) return 0;
+  const values = sheet.getRange(2, 4, lastRow - 1, 1).getDisplayValues();
+  for (let i = values.length - 1; i >= 0; i--) {
+    if (values[i][0] === sessionId) return i + 2;
+  }
+  return 0;
 }
 
-function toRow_(event) {
-  return [
+function upsertJourney_(sheet, event) {
+  const detail = event.detail || {};
+  const row = [
     new Date(),
-    event.eventId || '',
-    event.at || '',
-    event.type || '',
+    detail.startedAt || event.at || '',
     event.visitorId || '',
     event.sessionId || '',
-    JSON.stringify(event.detail || {}),
-    event.url || '',
-    event.title || '',
-    JSON.stringify(event.screen || []),
-    event.language || '',
-    event.platform || '',
-    event.timezone || '',
+    detail.currentStage || '',
+    detail.status || '',
+    detail.song || '',
+    detail.candles || '0/5',
+    (detail.envelopes || []).join('\n'),
+    formatQuiz_(detail.quizAnswers || []),
+    Number(detail.heartScore || 0),
+    detail.scratch ? 'สำเร็จ' : 'ยัง',
+    detail.gift || '',
+    detail.giftPrice === '' ? '' : Number(detail.giftPrice || 0),
+    detail.messageToMek || '',
+    detail.fireworks ? 'ดูแล้ว' : 'ยัง',
+    Number(detail.durationSeconds || 0),
+    `${event.platform || ''} | ${event.ua || ''}`,
     event.referrer || '',
-    event.online === true,
-    event.ua || ''
   ];
+  const targetRow = findSessionRow_(sheet, event.sessionId) || sheet.getLastRow() + 1;
+  sheet.getRange(targetRow, 1, 1, HEADERS.length).setValues([row]);
+  sheet.getRange(targetRow, 9, 1, 2).setWrap(true);
+  sheet.getRange(targetRow, 15).setWrap(true);
+}
+
+function formatQuiz_(answers) {
+  return answers.map((answer, index) =>
+    `${index + 1}. ${answer.answer || '-'} ${answer.correct ? '✓' : '✗'}`
+  ).join('\n');
 }
 
 function json_(data) {

@@ -548,12 +548,26 @@ const $ = s => document.querySelector(s);
    หลัง Deploy ไฟล์ google-apps-script/Code.gs ให้ใส่ Web app URL ตรงนี้
    ถ้ายังเว้นว่างไว้ เว็บจะเก็บข้อมูลไว้ใน localStorage ของเครื่องที่เปิดเว็บก่อน */
 const DATA_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwb_ZanbYt62i_2a3g6Qnv6yxiZlTt64YwdJ4KH8b1Kwmh-Z_TnFbxi3vZ0QvOoBtTg/exec';
-const DATA_KEY = 'jane-birthday-events';
-const DATA_QUEUE_KEY = 'jane-birthday-pending-events';
-const DATA_SYNC_KEY = 'jane-birthday-synced-v2';
+const DATA_KEY = 'jane-birthday-journeys-v3';
+const DATA_QUEUE_KEY = 'jane-birthday-pending-journeys-v3';
 const VISITOR_KEY = 'jane-birthday-visitor';
 const SESSION_ID = (crypto.randomUUID && crypto.randomUUID()) || ('s-' + Date.now() + '-' + Math.random().toString(16).slice(2));
 const PAGE_OPENED_AT = Date.now();
+const JOURNEY = {
+  startedAt:new Date().toISOString(),
+  currentStage:'เปิดเว็บ',
+  status:'กำลังเล่น',
+  song:'',
+  candles:'0/5',
+  envelopes:[],
+  quizAnswers:[],
+  heartScore:0,
+  scratch:false,
+  gift:'',
+  giftPrice:'',
+  messageToMek:'',
+  fireworks:false
+};
 function visitorId(){
   try {
     let id = localStorage.getItem(VISITOR_KEY);
@@ -626,19 +640,86 @@ function flushEventQueue(){
       });
   } catch(e){}
 }
-function recoverSavedEvents(){
-  if(!DATA_ENDPOINT) return;
-  try {
-    if(localStorage.getItem(DATA_SYNC_KEY) === DATA_ENDPOINT) return;
-    const saved = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
-    saved.forEach(queueEvent);
-    localStorage.setItem(DATA_SYNC_KEY, DATA_ENDPOINT);
-  } catch(e){}
-}
 function collectData(type, detail = {}){
+  let shouldSend = true;
+  switch(type){
+    case 'page_opened':
+      JOURNEY.currentStage = 'เปิดเว็บ';
+      break;
+    case 'gift_box_opened':
+      JOURNEY.currentStage = 'เปิดกล่องของขวัญ';
+      break;
+    case 'song_selected':
+      JOURNEY.currentStage = 'เลือกเพลง';
+      JOURNEY.song = `${detail.title || ''} — ${detail.artist || ''}`.trim();
+      break;
+    case 'candle_blown':
+      JOURNEY.currentStage = 'เป่าเทียน';
+      JOURNEY.candles = `${5 - Number(detail.candlesLeft || 0)}/5`;
+      break;
+    case 'candles_completed':
+      JOURNEY.currentStage = 'เป่าเทียนครบ';
+      JOURNEY.candles = '5/5';
+      break;
+    case 'envelope_opened':
+      JOURNEY.currentStage = 'เปิดซองคำอวยพร';
+      if(detail.wish && !JOURNEY.envelopes.includes(detail.wish)) JOURNEY.envelopes.push(detail.wish);
+      break;
+    case 'quiz_answered':
+      JOURNEY.currentStage = 'ตอบคำถาม';
+      JOURNEY.quizAnswers.push({
+        question:detail.question || '',
+        answer:detail.answer || '',
+        correct:detail.correct === true
+      });
+      break;
+    case 'quiz_completed':
+      JOURNEY.currentStage = 'ตอบคำถามครบ';
+      break;
+    case 'heart_game_started':
+      JOURNEY.currentStage = 'เกมเก็บหัวใจ';
+      break;
+    case 'heart_drop_caught':
+      JOURNEY.heartScore = Number(detail.score || 0);
+      break;
+    case 'heart_game_completed':
+      JOURNEY.currentStage = 'เกมหัวใจสำเร็จ';
+      JOURNEY.heartScore = Number(detail.score || 0);
+      break;
+    case 'scratch_card_completed':
+      JOURNEY.currentStage = 'ขูดคูปองสำเร็จ';
+      JOURNEY.scratch = true;
+      break;
+    case 'gift_selected':
+      JOURNEY.currentStage = 'เลือกของขวัญ';
+      JOURNEY.gift = `${detail.emo || ''} ${detail.name || ''}`.trim();
+      JOURNEY.giftPrice = Number(detail.price || 0);
+      break;
+    case 'gift_order_confirmed':
+      JOURNEY.currentStage = 'ยืนยันของขวัญ';
+      JOURNEY.status = 'เล่นถึงจดหมาย';
+      break;
+    case 'cloud_message_submitted':
+      JOURNEY.currentStage = 'ส่งข้อความถึงเมฆ';
+      JOURNEY.messageToMek = detail.message || '';
+      JOURNEY.status = 'ส่งข้อความแล้ว';
+      break;
+    case 'fireworks_opened':
+      JOURNEY.currentStage = 'ดูพลุ';
+      JOURNEY.fireworks = true;
+      JOURNEY.status = 'เล่นจบแล้ว';
+      break;
+    case 'page_closed':
+      JOURNEY.durationSeconds = Number(detail.durationSeconds || 0);
+      break;
+    default:
+      shouldSend = false;
+  }
+  if(!shouldSend) return;
   const ev = {
     eventId:(crypto.randomUUID && crypto.randomUUID()) || ('e-' + Date.now() + '-' + Math.random().toString(16).slice(2)),
-    type, detail,
+    type:'journey_update',
+    detail:{ ...JOURNEY },
     at:new Date().toISOString(),
     visitorId:visitorId(),
     sessionId:SESSION_ID,
@@ -674,7 +755,6 @@ collectData('page_opened', {
   viewport:{ width:innerWidth, height:innerHeight },
   devicePixelRatio:window.devicePixelRatio || 1
 });
-recoverSavedEvents();
 flushEventQueue();
 function show(id){
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
